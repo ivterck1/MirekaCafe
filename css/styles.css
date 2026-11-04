@@ -266,9 +266,9 @@ textarea:focus-visible {
   color: var(--color-text);
   font-family: var(--font-heading);
   font-size: var(--hero-title-size);
-  font-weight: 400;
-  line-height: 1.02;
-  text-transform: uppercase;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
 }
 
 .hero h1 span,
@@ -434,10 +434,10 @@ textarea:focus-visible {
   position: relative;
   margin: 0;
   color: var(--color-secondary);
-  font-size: clamp(2rem, 10vw, 3.6rem);
-  font-weight: 950;
-  line-height: 0.95;
-  text-transform: uppercase;
+  font-size: clamp(2rem, 1.5rem + 2.5vw, 3.6rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
 }
 
 .section-title h2::after {
@@ -529,9 +529,8 @@ textarea:focus-visible {
 
 .specialty-card h3 {
   font-size: 1.45rem;
-  font-weight: 950;
-  line-height: 1;
-  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .specialty-card p {
@@ -592,7 +591,7 @@ textarea:focus-visible {
   color: var(--color-secondary);
   background: var(--detail-color-14);
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 800;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
@@ -682,9 +681,9 @@ textarea:focus-visible {
 .dish-content h3 {
   color: var(--color-secondary);
   font-size: 1rem;
-  font-weight: 950;
-  line-height: 1.05;
-  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .dish-content > p:not(.dish-category) {
@@ -919,9 +918,9 @@ button:disabled {
 .order-form-section h2 {
   margin: 0;
   color: var(--color-secondary);
-  font-size: 1.2rem;
-  font-weight: 950;
-  text-transform: uppercase;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 .order-form {
@@ -1024,9 +1023,9 @@ button:disabled {
 
 .story-card h2 {
   color: var(--color-secondary);
-  font-size: 1.35rem;
-  font-weight: 950;
-  text-transform: uppercase;
+  font-size: clamp(1.65rem, 1.35rem + 1.2vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.12;
 }
 
 .story-card h2::after {
@@ -1041,7 +1040,9 @@ button:disabled {
 .story-card .story-highlight {
   margin-top: 0.65rem;
   color: var(--color-primary);
-  font-weight: 950;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .site-footer {
@@ -1314,10 +1315,6 @@ body.order-panel-open .mobile-panel-backdrop {
 }
 
 @media (min-width: 1280px) {
-  .hero h1 {
-    font-size: 7.4rem;
-  }
-
   .section {
     padding-block: 3rem;
   }
@@ -1334,7 +1331,7 @@ body.order-panel-open .mobile-panel-backdrop {
   }
 }
 
-h1, h2, h3 { font-family: var(--font-heading); }
+h1, h2, .story-card .story-highlight { font-family: var(--font-heading); }
 #business-contact a { display: inline-block; margin: .5rem; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
 
