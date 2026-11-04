@@ -49,6 +49,8 @@ El Excel indica `croissant.webp`; la salida usa `assets/images/products/croissan
 
 ## Importar y revisar
 
+El cliente puede editar el XLSX en Excel, LibreOffice u otra herramienta compatible. SheetJS CE lee los valores de MENU y CATEGORIAS; ExcelJS se usa para generar nuestra plantilla con sus estilos y controles. El cliente no necesita conservar estilos, filtros ni tablas internas. El importador no ejecuta fórmulas ni macros ni sigue enlaces externos. Usa valores simples en los campos obligatorios, sin fechas ni fórmulas.
+
 Desde la raíz del proyecto, con Node.js 18 o posterior:
 
 ```sh

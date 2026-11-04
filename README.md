@@ -44,7 +44,7 @@ Ejecuta python -m http.server 8000 --bind 127.0.0.1 y abre http://127.0.0.1:8000
 
 Entrega al nuevo cliente `templates/menu-cliente.xlsx`: MENU contiene categoria, nombre, descripcion, precio, imagen, destacado, disponible y orden; DATOS_NEGOCIO contiene campo/valor; CATEGORIAS contiene categoria/orden. Los ejemplos son ficticios. Para menús extensos, es la fuente inicial recomendada. Sigue [el flujo completo](docs/MENU_DESDE_EXCEL.md) para validar, reunir fotos, detectar faltantes, producir imágenes, normalizar nombres, optimizar a WebP y actualizar catálogo/configuración.
 
-Con Node.js 18 o posterior, instala las herramientas de desarrollo mediante `npm install` (o `npm ci` con el lockfile). ExcelJS es exclusivamente una dependencia de desarrollo.
+Con Node.js 18 o posterior, instala las herramientas de desarrollo mediante `npm install` (o `npm ci` con el lockfile). SheetJS CE lee los XLSX de clientes y ExcelJS se usa para generar la plantilla. El cliente puede editar el archivo en Excel, LibreOffice u otra herramienta compatible sin preocuparse por estilos ni tablas internas.
 
 ```sh
 npm run menu:generate

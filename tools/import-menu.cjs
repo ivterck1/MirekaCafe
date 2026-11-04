@@ -1,6 +1,6 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const ExcelJS = require('exceljs');
+const XLSX = require('xlsx');
 const ROOT = path.resolve(__dirname, '..');
 const HEADERS = {
   MENU: ['categoria', 'nombre', 'descripcion', 'precio', 'imagen', 'destacado', 'disponible', 'orden'],
@@ -10,26 +10,49 @@ const text = value => typeof value === 'string' ? value.trim() : '';
 const slug = name => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 async function generate(input = path.join(ROOT, 'templates/menu-cliente.xlsx'), {write = false, root = ROOT} = {}) {
-  const book = new ExcelJS.Workbook();
-  await book.xlsx.readFile(input);
+  const book = XLSX.read(await fs.readFile(input), {
+    sheets: Object.keys(HEADERS), cellDates: true, cellFormula: true,
+    cellHTML: false, cellText: false, bookVBA: false, sheetStubs: true
+  });
   const errors = [], warnings = [];
   function rows(name) {
-    const sheet = book.getWorksheet(name);
+    const sheet = book.Sheets[name];
     if (!sheet) { errors.push(`Falta la hoja ${name}.`); return []; }
     const headers = HEADERS[name];
-    if (headers.some((h, i) => sheet.getRow(1).getCell(i + 1).value !== h) || sheet.getRow(1).actualCellCount !== headers.length) {
+    const hasFormula = cell => cell.f != null || cell.F != null;
+    const populatedRows = new Map();
+    let extraColumn = false;
+    for (const [address, cell] of Object.entries(sheet)) {
+      if (address.startsWith('!') || (!hasFormula(cell) && (cell.v == null || cell.v === ''))) continue;
+      const {r, c} = XLSX.utils.decode_cell(address);
+      if (c >= headers.length) { extraColumn = true; continue; }
+      if (!populatedRows.has(r)) populatedRows.set(r, []);
+      populatedRows.get(r)[c] = cell;
+    }
+    const header = populatedRows.get(0) || [];
+    if (extraColumn || headers.some((h, i) => !header[i] || hasFormula(header[i]) || header[i].t !== 's' || header[i].v !== h)) {
       errors.push(`${name}: columnas incorrectas; usa ${headers.join(', ')}.`); return [];
     }
     const result = [];
-    sheet.eachRow((row, n) => {
-      if (n === 1) return;
-      const values = headers.map((_, i) => row.getCell(i + 1).value);
-      if (values.every(v => v == null || v === '')) return;
+    for (const [r, cells] of [...populatedRows].sort(([a], [b]) => a - b)) {
+      if (r === 0) continue;
+      const n = r + 1;
+      const values = headers.map((h, i) => {
+        const cell = cells[i];
+        if (!cell) return null;
+        if (hasFormula(cell)) {
+          errors.push(`${name} fila ${n}: ${h} no admite fórmulas.`);
+          return null;
+        }
+        if (cell.t === 's') return cell.v.trim();
+        if (cell.t === 'n' && Number.isFinite(cell.v)) return cell.v;
+        return null;
+      });
       const item = Object.fromEntries(headers.map((h, i) => [h, values[i]]));
       item.row = n;
       for (const h of headers) if (item[h] == null || text(item[h]) === '' && typeof item[h] !== 'number') errors.push(`${name} fila ${n}: ${h} vacío o no es un valor simple.`);
       result.push(item);
-    });
+    }
     return result;
   }
   const categories = rows('CATEGORIAS');
