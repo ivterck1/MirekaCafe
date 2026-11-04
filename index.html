@@ -3,23 +3,23 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú y pedidos por WhatsApp</title>
+    <title>Mireka Café | Cafetería de Autor</title>
     <meta
       name="description"
-      content="Menú digital y pedidos por WhatsApp."
+      content="Cafetería de Autor"
     >
-    <meta property="og:title" content="Menú y pedidos">
+    <meta property="og:title" content="Mireka Café | Cafetería de Autor">
     <meta
       property="og:description"
-      content="Menú digital y pedidos por WhatsApp."
+      content="Cafetería de Autor"
     >
     <meta property="og:type" content="website">
     <link rel="icon" href="assets/images/brand/placeholder.svg?v=1.0.1" sizes="any">
     <link rel="stylesheet" href="css/theme.css?v=1.0.1">
     <link rel="stylesheet" href="css/styles.css?v=1.0.1">
-    <script src="js/config.js?v=1.0.1" defer></script>
-    <script src="js/menu-data.js?v=1.0.1" defer></script>
-    <script src="js/app.js?v=1.0.1" defer></script>
+    <script src="js/config.js?v=1.0.2" defer></script>
+    <script src="js/menu-data.js?v=1.0.2" defer></script>
+    <script src="js/app.js?v=1.0.2" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -41,7 +41,7 @@
         </ul>
 
         <div class="header-actions">
-          <a class="header-whatsapp" href="#pedido">Pedir por WhatsApp</a>
+          <a class="header-whatsapp" href="#pedido" data-order-link>Ver pedido</a>
           <a class="header-cart" href="#carrito" aria-label="Ver carrito">
             <span class="cart-icon" aria-hidden="true"></span>
             <span class="cart-count" id="header-cart-count">0</span>
@@ -62,7 +62,7 @@
             <p data-config="hero.description">Explora el menú y arma tu pedido.</p>
             <div class="hero-actions">
               <a class="button secondary-button" href="#menu">Ver menú</a>
-              <a class="button primary-button" href="#pedido">Pedir por WhatsApp</a>
+              <a class="button primary-button" href="#pedido" data-order-link>Ver pedido</a>
             </div>
           </div>
 
@@ -127,6 +127,7 @@
               <span aria-hidden="true"></span>
             </div>
 
+            <p id="catalog-price-status" hidden></p>
             <div class="category-list" role="group" aria-label="Categorías del menú"></div>
 
             <div class="menu-grid" id="menu-grid" aria-label="Platillos disponibles"></div>
@@ -155,11 +156,11 @@
               <div class="cart-totals">
                 <div class="cart-line">
                   <span>Subtotal</span>
-                  <strong id="cart-subtotal">$0.00</strong>
+                  <strong id="cart-subtotal">—</strong>
                 </div>
                 <div class="cart-total">
                   <span>Total</span>
-                  <strong id="cart-total">$0.00</strong>
+                  <strong id="cart-total">—</strong>
                 </div>
               </div>
             </div>
@@ -175,16 +176,8 @@
                   placeholder="Ej. Ana López"
                 >
 
-                <fieldset>
+                <fieldset id="delivery-options">
                   <legend>Tipo de entrega</legend>
-                  <label>
-                    <input type="radio" name="deliveryType" value="domicilio">
-                    Entrega a domicilio
-                  </label>
-                  <label>
-                    <input type="radio" name="deliveryType" value="recoger">
-                    Recoger en restaurante
-                  </label>
                 </fieldset>
 
                 <label for="customer-address">Dirección</label>
@@ -249,7 +242,7 @@
     <div class="mobile-order-bar" id="mobile-order-bar" hidden>
       <button class="mobile-order-toggle" id="mobile-order-toggle" type="button" aria-controls="carrito" aria-expanded="false">
         <span class="mobile-order-count" id="mobile-order-count">0 productos</span>
-        <strong id="mobile-order-total">$0.00</strong>
+        <strong id="mobile-order-total">—</strong>
         <span>Ver pedido</span>
       </button>
     </div>

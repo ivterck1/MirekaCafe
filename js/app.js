@@ -18,6 +18,7 @@ const APP_CART_STORAGE_KEY = siteConfig.order.storageKey;
 // Sustituir por el numero real con codigo de pais, sin +, espacios ni guiones.
 const RESTAURANT_WHATSAPP_NUMBER = siteConfig.whatsapp.number;
 const WHATSAPP_BASE_URL = "https://wa.me";
+const PENDING_PRICES_MESSAGE = "Los precios están pendientes de confirmación. Por ahora no se pueden enviar pedidos.";
 const cartItems = [];
 
 const currencyFormatter = new Intl.NumberFormat(siteConfig.order.locale, {
@@ -27,7 +28,7 @@ const currencyFormatter = new Intl.NumberFormat(siteConfig.order.locale, {
 
 // Convierte precios numericos a la moneda y locale configurados.
 function formatPrice(price) {
-  return currencyFormatter.format(price);
+  return siteConfig.order.pricesApproved === true ? currencyFormatter.format(price) : "—";
 }
 
 // Busca un producto del menu usando su id unico.
@@ -68,6 +69,36 @@ function getCustomerData() {
     address: addressInput ? addressInput.value.trim() : "",
     notes: notesInput ? notesInput.value.trim() : "",
   };
+}
+
+function findDeliveryMode(id) {
+  return siteConfig.order.deliveryModes.find((mode) => mode.id === id);
+}
+
+function renderDeliveryOptions() {
+  const options = document.querySelector("#delivery-options");
+  const addressInput = document.querySelector("#customer-address");
+  const addressLabel = document.querySelector('label[for="customer-address"]');
+
+  function updateAddressField() {
+    const requiresAddress = findDeliveryMode(getCustomerData().deliveryType)?.requiresAddress === true;
+    addressLabel.hidden = !requiresAddress;
+    addressInput.hidden = !requiresAddress;
+    addressInput.disabled = !requiresAddress;
+    addressInput.required = requiresAddress;
+  }
+
+  siteConfig.order.deliveryModes.forEach((mode) => {
+    const label = document.createElement("label");
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "deliveryType";
+    radio.value = mode.id;
+    label.append(radio, mode.label);
+    options.append(label);
+  });
+  options.addEventListener("change", updateAddressField);
+  updateAddressField();
 }
 
 // Muestra mensajes visibles y anunciables para errores o avisos del pedido.
@@ -385,11 +416,10 @@ function validateCustomerData(customerData) {
     errors.push("Escribe tu nombre para preparar el pedido.");
   }
 
-  if (!["domicilio", "recoger"].includes(customerData.deliveryType)) {
-    errors.push("Selecciona si quieres entrega a domicilio o recoger en restaurante.");
-  }
-
-  if (customerData.deliveryType === "domicilio" && !customerData.address) {
+  const deliveryMode = findDeliveryMode(customerData.deliveryType);
+  if (!deliveryMode) {
+    errors.push("Selecciona una modalidad de entrega.");
+  } else if (deliveryMode.requiresAddress && !customerData.address) {
     errors.push("Escribe la dirección para entrega a domicilio.");
   }
 
@@ -398,16 +428,24 @@ function validateCustomerData(customerData) {
 
 // Junta las validaciones del carrito, formulario y configuracion de WhatsApp.
 function validateOrder(customerData) {
+  if (siteConfig.order.pricesApproved !== true) {
+    return [PENDING_PRICES_MESSAGE];
+  }
+
   const errors = [
     ...validateCartForOrder(),
     ...validateCustomerData(customerData),
   ];
 
-  if (!siteConfig.whatsapp.enabled || !/^[1-9]\d{7,14}$/.test(RESTAURANT_WHATSAPP_NUMBER)) {
+  if (!isWhatsAppConfigured()) {
     errors.push("Configura y activa el WhatsApp del negocio antes de enviar pedidos.");
   }
 
   return errors;
+}
+
+function isWhatsAppConfigured() {
+  return siteConfig.whatsapp.enabled === true && /^[1-9]\d{7,14}$/.test(RESTAURANT_WHATSAPP_NUMBER);
 }
 
 // Construye las lineas de productos que iran en el mensaje de WhatsApp.
@@ -423,9 +461,7 @@ function buildProductMessageLines() {
 function buildWhatsAppMessage(customerData) {
   const productLines = buildProductMessageLines();
   const total = calculateCartSubtotal();
-  const deliveryText = customerData.deliveryType === "domicilio"
-    ? "Entrega a domicilio"
-    : "Recoger en restaurante";
+  const deliveryMode = findDeliveryMode(customerData.deliveryType);
   const messageLines = [
     siteConfig.business.name,
     "",
@@ -438,10 +474,10 @@ function buildWhatsAppMessage(customerData) {
     "",
     "Datos del cliente:",
     `Nombre: ${customerData.name}`,
-    `Entrega: ${deliveryText}`,
+    `Entrega: ${deliveryMode.label}`,
   ];
 
-  if (customerData.deliveryType === "domicilio") {
+  if (deliveryMode.requiresAddress) {
     messageLines.push(`Dirección: ${customerData.address}`);
   }
 
@@ -459,13 +495,14 @@ function createWhatsAppUrl(message) {
   return `${WHATSAPP_BASE_URL}/${RESTAURANT_WHATSAPP_NUMBER}?text=${encodedMessage}`;
 }
 
-// Activa el boton de WhatsApp solo cuando hay productos en el carrito.
+// Activa el botón cuando el canal y los precios están aprobados y hay productos.
 function updateWhatsAppButtonState() {
   if (!whatsappButton) {
     return;
   }
 
-  whatsappButton.disabled = cartItems.length === 0;
+  whatsappButton.disabled = cartItems.length === 0
+    || siteConfig.order.pricesApproved !== true || !isWhatsAppConfigured();
 }
 
 // Sincroniza contador del header y barra inferior movil con el carrito actual.
@@ -715,6 +752,18 @@ function initializeApp() {
     if (event.key === "Escape") closeMobileOrderPanel();
   });
   applySiteConfig();
+  renderDeliveryOptions();
+  document.querySelector(".order-form").addEventListener("submit", (event) => event.preventDefault());
+  if (siteConfig.order.pricesApproved !== true) {
+    const priceStatus = document.querySelector("#catalog-price-status");
+    priceStatus.textContent = PENDING_PRICES_MESSAGE;
+    priceStatus.hidden = false;
+    showOrderMessage(PENDING_PRICES_MESSAGE);
+  } else if (isWhatsAppConfigured()) {
+    document.querySelectorAll("[data-order-link]").forEach((link) => {
+      link.textContent = "Pedir por WhatsApp";
+    });
+  }
   renderCategories();
   renderFeaturedProducts();
   restoreCartItems(loadCartFromStorage());
@@ -751,7 +800,7 @@ function applySiteConfig() {
     const value = element.dataset.config.split(".").reduce((value, key) => value?.[key], siteConfig);
     element.textContent = value ?? "";
   });
-  document.title = `${siteConfig.business.name} | Pedidos por WhatsApp`;
+  document.title = `${siteConfig.business.name} | ${siteConfig.business.description}`;
   document.querySelector('meta[name="description"]').content = siteConfig.business.description;
   document.querySelector('meta[property="og:title"]').content = document.title;
   document.querySelector('meta[property="og:description"]').content = siteConfig.business.description;
