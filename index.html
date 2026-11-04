@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú y pedidos por WhatsApp</title>
+    <meta
+      name="description"
+      content="Menú digital y pedidos por WhatsApp."
+    >
+    <meta property="og:title" content="Menú y pedidos">
+    <meta
+      property="og:description"
+      content="Menú digital y pedidos por WhatsApp."
+    >
+    <meta property="og:type" content="website">
+    <link rel="icon" href="assets/images/brand/placeholder.svg?v=1.0.1" sizes="any">
+    <link rel="stylesheet" href="css/theme.css?v=1.0.1">
+    <link rel="stylesheet" href="css/styles.css?v=1.0.1">
+    <script src="js/config.js?v=1.0.1" defer></script>
+    <script src="js/menu-data.js?v=1.0.1" defer></script>
+    <script src="js/app.js?v=1.0.1" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a class="brand" href="#inicio" aria-label="Ir al inicio">
+          <img
+            src="assets/images/brand/placeholder.svg"
+            alt="Nombre del negocio"
+            width="230"
+            height="96"
+          >
+        </a>
+
+        <ul class="nav-links">
+          <li><a class="is-active" href="#inicio">Inicio</a></li>
+          <li><a href="#menu">Menú</a></li>
+          <li><a href="#especialidades">Especialidades</a></li>
+          <li><a href="#pedido">Pedido</a></li>
+        </ul>
+
+        <div class="header-actions">
+          <a class="header-whatsapp" href="#pedido">Pedir por WhatsApp</a>
+          <a class="header-cart" href="#carrito" aria-label="Ver carrito">
+            <span class="cart-icon" aria-hidden="true"></span>
+            <span class="cart-count" id="header-cart-count">0</span>
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="hero-content">
+          <div class="hero-copy">
+            <p class="eyebrow" data-config="hero.eyebrow">Tu menú, a un mensaje</p>
+            <h1>
+              <span data-config="hero.title">Elige tu próximo antojo.</span>
+              <strong data-config="hero.highlight">Pide a tu manera.</strong>
+            </h1>
+            <p data-config="hero.description">Explora el menú y arma tu pedido.</p>
+            <div class="hero-actions">
+              <a class="button secondary-button" href="#menu">Ver menú</a>
+              <a class="button primary-button" href="#pedido">Pedir por WhatsApp</a>
+            </div>
+          </div>
+
+          <figure class="hero-plate" aria-hidden="true">
+            <img
+              src="assets/images/hero/placeholder.svg"
+              alt="Presentación del negocio"
+              width="900"
+              height="675"
+            >
+          </figure>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Beneficios del pedido">
+        <article>
+          <span aria-hidden="true">01</span>
+          <div>
+            <strong>Menú a tu alcance</strong>
+            <p>Consulta las opciones</p>
+          </div>
+        </article>
+        <article>
+          <span aria-hidden="true">02</span>
+          <div>
+            <strong>Sabor auténtico</strong>
+            <p>Recetas de la casa</p>
+          </div>
+        </article>
+        <article>
+          <span aria-hidden="true">03</span>
+          <div>
+            <strong>Listo para disfrutar</strong>
+            <p>Ordena y confirma</p>
+          </div>
+        </article>
+        <article>
+          <span aria-hidden="true">04</span>
+          <div>
+            <strong>Compra segura</strong>
+            <p>Pedido revisado antes de enviar</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="section specialties-section" id="especialidades" aria-labelledby="specialties-title">
+        <div class="section-title">
+          <span aria-hidden="true"></span>
+          <h2 id="specialties-title">Especialidades</h2>
+          <span aria-hidden="true"></span>
+        </div>
+
+        <div class="specialties-grid" id="featured-grid"></div>
+      </section>
+
+      <section class="section menu-order-section" id="menu" aria-labelledby="menu-title">
+        <div class="menu-order-layout">
+          <div class="catalog-column">
+            <div class="section-title compact-title">
+              <span aria-hidden="true"></span>
+              <h2 id="menu-title">Menú completo</h2>
+              <span aria-hidden="true"></span>
+            </div>
+
+            <div class="category-list" role="group" aria-label="Categorías del menú"></div>
+
+            <div class="menu-grid" id="menu-grid" aria-label="Platillos disponibles"></div>
+          </div>
+
+          <aside class="cart-panel" id="carrito" aria-labelledby="cart-title">
+            <div class="cart-panel-header">
+              <div class="section-title compact-title">
+                <span aria-hidden="true"></span>
+                <h2 id="cart-title">Tu pedido</h2>
+                <span aria-hidden="true"></span>
+              </div>
+              <button
+                class="mobile-panel-close"
+                id="mobile-order-close"
+                type="button"
+                aria-label="Cerrar pedido"
+              >
+                ×
+              </button>
+            </div>
+
+            <div class="cart-summary" aria-live="polite">
+              <p class="empty-cart" id="empty-cart">Tu carrito está vacío.</p>
+              <div class="cart-items" id="cart-items" aria-label="Productos en el carrito"></div>
+              <div class="cart-totals">
+                <div class="cart-line">
+                  <span>Subtotal</span>
+                  <strong id="cart-subtotal">$0.00</strong>
+                </div>
+                <div class="cart-total">
+                  <span>Total</span>
+                  <strong id="cart-total">$0.00</strong>
+                </div>
+              </div>
+            </div>
+
+            <section class="order-form-section" id="pedido" aria-labelledby="order-title">
+              <h2 id="order-title">Datos del cliente</h2>
+              <form class="order-form">
+                <label for="customer-name">Nombre</label>
+                <input
+                  id="customer-name"
+                  name="customerName"
+                  type="text"
+                  placeholder="Ej. Ana López"
+                >
+
+                <fieldset>
+                  <legend>Tipo de entrega</legend>
+                  <label>
+                    <input type="radio" name="deliveryType" value="domicilio">
+                    Entrega a domicilio
+                  </label>
+                  <label>
+                    <input type="radio" name="deliveryType" value="recoger">
+                    Recoger en restaurante
+                  </label>
+                </fieldset>
+
+                <label for="customer-address">Dirección</label>
+                <input
+                  id="customer-address"
+                  name="customerAddress"
+                  type="text"
+                  placeholder="Calle, número, colonia y referencias"
+                >
+
+                <label for="order-notes">Notas del pedido</label>
+                <textarea
+                  id="order-notes"
+                  name="orderNotes"
+                  rows="4"
+                  placeholder="Ej. Preferencias o indicaciones adicionales"
+                ></textarea>
+              </form>
+            </section>
+
+            <button class="whatsapp-button" type="button" disabled>
+              Enviar por WhatsApp
+            </button>
+            <p class="order-message" id="order-message" aria-live="polite"></p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section story-section" aria-labelledby="story-title">
+        <div class="story-card">
+          <img
+            src="assets/images/brand/placeholder.svg"
+            alt=""
+            width="240"
+            height="240"
+          >
+          <div>
+            <p class="eyebrow">Conoce el negocio</p>
+            <h2 id="story-title">Nuestra historia</h2>
+            <p data-config="business.description">Una propuesta gastronómica para compartir.</p>
+            <p class="story-highlight">Elige, revisa y pide.</p>
+          </div>
+        </div>
+      </section>
+    <noscript>Activa JavaScript para consultar el menú y preparar tu pedido.</noscript>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div><p data-config="business.name">Nombre del negocio</p><div id="business-contact"></div></div>
+        <img
+          src="assets/images/brand/placeholder.svg"
+          alt="Nombre del negocio"
+          width="230"
+          height="96"
+        >
+      </div>
+    </footer>
+
+    <div class="mobile-panel-backdrop" id="mobile-panel-backdrop" aria-hidden="true"></div>
+
+    <div class="mobile-order-bar" id="mobile-order-bar" hidden>
+      <button class="mobile-order-toggle" id="mobile-order-toggle" type="button" aria-controls="carrito" aria-expanded="false">
+        <span class="mobile-order-count" id="mobile-order-count">0 productos</span>
+        <strong id="mobile-order-total">$0.00</strong>
+        <span>Ver pedido</span>
+      </button>
+    </div>
+  </body>
+</html>
