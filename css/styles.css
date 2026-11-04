@@ -50,14 +50,16 @@ input:focus-visible,
 textarea:focus-visible {
   outline: 3px solid var(--detail-color-11);
   outline-offset: 3px;
+  box-shadow: 0 0 0 3px var(--color-surface);
 }
 
 .site-header {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--color-secondary);
-  border-bottom: 1px solid var(--detail-color-13);
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-gold);
+  border-image: var(--ornament-gold) 1;
   backdrop-filter: none;
 }
 
@@ -96,7 +98,7 @@ textarea:focus-visible {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
-  color: var(--color-surface);
+  color: var(--color-text);
   font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0;
@@ -195,24 +197,19 @@ textarea:focus-visible {
 .hero {
   position: relative;
   overflow: hidden;
-  color: var(--color-surface);
-  margin-top: -1px;
-  --hero-main-image: var(--hero-image);
-  background-color: var(--color-secondary-dark);
-  background-image:
-    linear-gradient(90deg, var(--detail-color-28) 0%, var(--detail-color-26) 42%, var(--detail-color-22) 68%, var(--detail-color-19) 100%),
-    linear-gradient(180deg, var(--detail-color-23) 0%, var(--detail-color-18) 30%),
-    var(--hero-main-image);
-  background-position: center top, center top, 74% center;
-  background-size: cover, cover, cover;
+  color: var(--color-text);
+  background: linear-gradient(120deg, var(--color-surface) 24%, var(--color-background-strong) 76%, var(--color-highlight));
 }
 
 .hero::before {
   position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 15% 28%, var(--detail-color-7), transparent 18rem),
-    linear-gradient(180deg, var(--detail-color-21), var(--detail-color-20));
+  inset-block-start: 1.25rem;
+  inset-inline-end: 1.5rem;
+  width: clamp(2.75rem, 10vw, 5rem);
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--color-gold);
+  border-radius: 50% 50% 0.35rem 0.35rem;
+  background: var(--ornament-gold) center 75% / 55% 2px no-repeat;
   content: "";
   pointer-events: none;
 }
@@ -244,16 +241,34 @@ textarea:focus-visible {
   text-transform: uppercase;
 }
 
+.hero .eyebrow::after,
+.section-title h2::after,
+.story-card h2::after,
+.footer-content > div::before {
+  content: "";
+  width: 4.5rem;
+  height: 0.55rem;
+  background: var(--ornament-gold);
+  clip-path: polygon(0 40%, 44% 40%, 50% 0, 56% 40%, 100% 40%,
+    100% 60%, 56% 60%, 50% 100%, 44% 60%, 0 60%);
+}
+
+.hero .eyebrow::after {
+  display: inline-block;
+  width: 3rem;
+  margin-inline-start: 0.65rem;
+  vertical-align: middle;
+}
+
 .hero h1 {
   max-width: 580px;
   margin: 0;
-  color: var(--detail-color-1);
+  color: var(--color-text);
   font-family: var(--font-heading);
   font-size: var(--hero-title-size);
   font-weight: 400;
   line-height: 1.02;
   text-transform: uppercase;
-  text-shadow: 0 8px 24px var(--detail-color-5);
 }
 
 .hero h1 span,
@@ -262,16 +277,15 @@ textarea:focus-visible {
 }
 
 .hero h1 strong {
-  color: var(--color-highlight);
+  color: var(--color-muted);
   font: inherit;
 }
 
 .hero p {
   max-width: 450px;
   margin: 1rem 0 0;
-  color: var(--detail-color-17);
+  color: var(--color-text);
   font-size: 1.05rem;
-  text-shadow: 0 4px 18px var(--detail-color-6);
 }
 
 .hero-actions,
@@ -327,16 +341,29 @@ textarea:focus-visible {
 }
 
 .button:hover,
-.menu-card button:hover,
-.whatsapp-button:hover,
+.menu-card button:enabled:hover,
+.whatsapp-button:enabled:hover,
 .header-whatsapp:hover,
 .mobile-order-toggle:hover {
   transform: translateY(-1px);
 }
 
 .primary-button:hover,
-.menu-card button:hover {
+.primary-button:active,
+.menu-card button:enabled:hover,
+.menu-card button:enabled:active,
+.header-whatsapp:hover,
+.header-whatsapp:active,
+.header-cart:hover,
+.header-cart:active {
   background: var(--color-primary-dark);
+}
+
+.secondary-button:hover,
+.secondary-button:active,
+.mobile-order-toggle:hover,
+.mobile-order-toggle:active {
+  background: var(--color-background-strong);
 }
 
 .hero-plate {
@@ -400,20 +427,28 @@ textarea:focus-visible {
 }
 
 .section-title span {
-  width: 2rem;
-  height: 0.45rem;
-  border-top: 4px solid var(--color-primary);
-  border-bottom: 4px solid var(--color-primary);
-  border-radius: 999px;
+  display: none;
 }
 
 .section-title h2 {
+  position: relative;
   margin: 0;
   color: var(--color-secondary);
   font-size: clamp(2rem, 10vw, 3.6rem);
   font-weight: 950;
   line-height: 0.95;
   text-transform: uppercase;
+}
+
+.section-title h2::after {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(100% + 0.2rem);
+  margin-inline: auto;
+}
+
+.cart-panel-header h2::after {
+  width: 3.5rem;
 }
 
 .compact-title {
@@ -444,6 +479,16 @@ textarea:focus-visible {
   scroll-snap-align: start;
 }
 
+.specialty-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 3px;
+  background: var(--ornament-gold);
+  content: "";
+  pointer-events: none;
+}
+
 .specialty-card img {
   width: 100%;
   height: 100%;
@@ -466,6 +511,15 @@ textarea:focus-visible {
   z-index: 1;
   padding: 1rem;
   color: var(--color-surface);
+}
+
+.specialty-card div::before {
+  display: block;
+  width: 2rem;
+  height: 2px;
+  margin-bottom: 0.55rem;
+  background: var(--color-gold);
+  content: "";
 }
 
 .specialty-card h3,
@@ -545,10 +599,28 @@ textarea:focus-visible {
   cursor: pointer;
 }
 
-.category-list button.is-active,
 .category-list button:hover {
+  background: var(--color-highlight);
+}
+
+.category-list button.is-active {
   color: var(--color-surface);
   background: var(--color-primary);
+  border-color: var(--color-gold);
+  box-shadow: inset 0 0 0 1px var(--color-gold);
+  text-decoration: underline;
+  text-underline-offset: 0.24em;
+}
+
+.category-list button:active,
+.category-list button.is-active:hover {
+  color: var(--color-surface);
+  background: var(--color-primary-dark);
+}
+
+#catalog-price-status {
+  color: var(--color-text);
+  background: var(--color-background-strong);
 }
 
 .menu-grid {
@@ -566,6 +638,11 @@ textarea:focus-visible {
   border: 1px solid var(--detail-color-32);
   border-radius: 12px;
   background: var(--detail-color-15);
+}
+
+.menu-card:hover,
+.menu-card:has(:focus-visible) {
+  border-color: var(--color-gold);
 }
 
 .dish-image {
@@ -642,7 +719,9 @@ textarea:focus-visible {
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.58;
+  color: var(--color-muted);
+  background: var(--color-background-strong);
+  box-shadow: none;
 }
 
 .cart-panel {
@@ -768,6 +847,15 @@ button:disabled {
   background: transparent;
 }
 
+.quantity-controls button:focus-visible {
+  outline-offset: -4px;
+}
+
+.quantity-controls button:hover,
+.quantity-controls button:active {
+  background: var(--color-background-strong);
+}
+
 .quantity-controls span {
   text-align: center;
   font-weight: 950;
@@ -820,6 +908,12 @@ button:disabled {
 .order-form-section {
   display: grid;
   gap: 0.8rem;
+  padding-top: 0.8rem;
+}
+
+.cart-totals,
+.order-form-section {
+  border-top: 1px solid var(--color-gold);
 }
 
 .order-form-section h2 {
@@ -852,6 +946,12 @@ button:disabled {
   background: var(--color-surface);
 }
 
+.order-form input::placeholder,
+.order-form textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
 .order-form fieldset {
   display: grid;
   gap: 0.65rem;
@@ -876,8 +976,15 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.whatsapp-button:hover {
+.whatsapp-button:enabled:hover,
+.whatsapp-button:enabled:active {
   background: var(--color-whatsapp-dark);
+}
+
+.whatsapp-button:disabled {
+  color: var(--color-muted);
+  background: var(--color-background-strong);
+  box-shadow: none;
 }
 
 .order-message {
@@ -922,6 +1029,11 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.story-card h2::after {
+  display: block;
+  margin-block: 0.35rem;
+}
+
 .story-card p {
   color: var(--color-text);
 }
@@ -936,6 +1048,8 @@ button:disabled {
   padding: 1.6rem 1rem calc(6rem + env(safe-area-inset-bottom));
   color: var(--color-surface);
   background: var(--color-secondary-dark);
+  border-top: 2px solid var(--color-gold);
+  border-image: var(--ornament-gold) 1;
 }
 
 .footer-content {
@@ -947,6 +1061,11 @@ button:disabled {
 
 .footer-content img {
   width: min(220px, 70vw);
+}
+
+.footer-content > div::before {
+  display: block;
+  margin-bottom: 0.6rem;
 }
 
 .footer-meta {
@@ -1024,11 +1143,6 @@ body.order-panel-open .mobile-panel-backdrop {
 }
 
 @media (max-width: 767px) {
-  .hero {
-    --hero-main-image: var(--hero-image-mobile);
-    background-position: center top, center top, 70% center;
-  }
-
   .cart-panel {
     position: fixed;
     right: 1rem;
@@ -1118,6 +1232,16 @@ body.order-panel-open .mobile-panel-backdrop {
 }
 
 @media (min-width: 1024px) {
+  .hero::before {
+    inset-block-start: 50%;
+    inset-inline-end: max(3rem, calc((100% - var(--container)) / 2 + 2rem));
+    width: clamp(14rem, 25vw, 24rem);
+    border-width: 2px;
+    outline: 1px solid var(--color-gold);
+    outline-offset: 0.65rem;
+    transform: translateY(-50%);
+  }
+
   .main-nav {
     grid-template-columns: auto minmax(0, 1fr) auto;
     padding: 0.25rem 1rem;
@@ -1215,3 +1339,10 @@ h1, h2, h3 { font-family: var(--font-heading); }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
 
 .specialty-card strong { color: var(--color-highlight); }
+
+:is(.primary-button, .header-whatsapp, .header-cart, .menu-card button:enabled, .whatsapp-button:enabled):is(:hover, :focus-visible) {
+  background-image: var(--ornament-gold);
+  background-position: center bottom 3px;
+  background-repeat: no-repeat;
+  background-size: min(2rem, 50%) 2px;
+}
