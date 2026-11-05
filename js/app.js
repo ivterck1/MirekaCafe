@@ -47,13 +47,28 @@ function getCartItemCount() {
 }
 
 // Obtiene la imagen real asociada a un producto.
-function getProductImageSrc(product) {
-  return product && product.imagen ? product.imagen : siteConfig.images.productPlaceholder;
-}
+function createProductImage(product, { alt = "", lazy = false } = {}) {
+  const image = document.createElement("img");
+  const source = product?.imagen?.trim();
+  const fallback = siteConfig.images.productPlaceholder;
+  image.alt = alt;
+  if (lazy) image.loading = "lazy";
 
-// Presenta las categorias con ortografia correcta sin cambiar sus valores internos.
-function formatCategoryLabel(category) {
-  return category;
+  function showFallback() {
+    image.dataset.imageState = "fallback";
+    image.addEventListener("error", () => {
+      image.dataset.imageState = "unavailable";
+    }, { once: true });
+    image.src = fallback;
+  }
+
+  if (source && source !== fallback) {
+    image.addEventListener("error", showFallback, { once: true });
+    image.src = source;
+  } else {
+    showFallback();
+  }
+  return image;
 }
 
 // Lee y limpia los datos actuales del formulario del cliente.
@@ -214,18 +229,11 @@ function createMenuCard(product) {
   const image = document.createElement("div");
   image.className = "dish-image";
 
-  const imageElement = document.createElement("img");
-  imageElement.src = getProductImageSrc(product);
-  imageElement.alt = product.nombre;
-  imageElement.loading = "lazy";
+  const imageElement = createProductImage(product, { alt: product.nombre, lazy: true });
   image.append(imageElement);
 
   const content = document.createElement("div");
   content.className = "dish-content";
-
-  const category = document.createElement("p");
-  category.className = "dish-category";
-  category.textContent = formatCategoryLabel(product.categoria);
 
   const title = document.createElement("h3");
   title.textContent = product.nombre;
@@ -238,7 +246,7 @@ function createMenuCard(product) {
 
   const price = document.createElement("p");
   price.className = "price";
-  price.textContent = formatPrice(product.precio);
+  price.textContent = siteConfig.order.pricesApproved === true ? formatPrice(product.precio) : "Precio pendiente";
 
   const button = document.createElement("button");
   button.type = "button";
@@ -248,7 +256,7 @@ function createMenuCard(product) {
   button.setAttribute("aria-label", `Agregar ${product.nombre}`);
 
   footer.append(price, button);
-  content.append(category, title, description, footer);
+  content.append(title, description, footer);
   card.append(image, content);
 
   return card;
@@ -556,11 +564,8 @@ function createCartItemInfo(item) {
 // Crea una miniatura del producto para reforzar la lectura visual del pedido.
 function createCartItemThumbnail(item) {
   const product = findProductById(item.id);
-  const thumbnail = document.createElement("img");
+  const thumbnail = createProductImage(product, { lazy: true });
   thumbnail.className = "cart-item-image";
-  thumbnail.src = getProductImageSrc(product);
-  thumbnail.alt = "";
-  thumbnail.loading = "lazy";
 
   return thumbnail;
 }
@@ -810,7 +815,15 @@ function applySiteConfig() {
   });
   document.querySelector('.brand').setAttribute('aria-label', `Inicio de ${siteConfig.business.shortName}`);
   document.querySelector('.story-card img').src = siteConfig.images.logo;
-  document.querySelector('.hero-plate img').src = siteConfig.images.hero;
+  if (siteConfig.images.hero) {
+    const heroMedia = document.querySelector('.hero-media');
+    const photo = new Image();
+    photo.className = 'hero-photo';
+    photo.alt = '';
+    photo.fetchPriority = 'high';
+    photo.addEventListener('load', () => heroMedia.append(photo), { once: true });
+    photo.src = siteConfig.images.hero;
+  }
   const contact = document.querySelector('#business-contact');
   ['hours', 'address', 'coverage'].forEach((key) => {
     if (!siteConfig.contact[key]) return;
@@ -853,9 +866,7 @@ function renderFeaturedProducts() {
   products.filter((product) => product.disponible === true).slice(0, 3).forEach((product) => {
     const card = document.createElement('article');
     card.className = 'specialty-card';
-    const image = document.createElement('img');
-    image.src = getProductImageSrc(product);
-    image.alt = product.nombre;
+    const image = createProductImage(product, { alt: product.nombre });
     image.width = 640;
     image.height = 480;
     const content = document.createElement('div');

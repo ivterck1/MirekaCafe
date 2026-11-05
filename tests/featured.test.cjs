@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 function render(items) {
-  const element = () => ({children: [], append(...nodes) { this.children.push(...nodes); }, replaceChildren(...nodes) { this.children = nodes; }});
+  const element = () => ({children: [], dataset: {}, addEventListener() {}, append(...nodes) { this.children.push(...nodes); }, replaceChildren(...nodes) { this.children = nodes; }});
   const grid = element();
   const context = vm.createContext({document: {
     querySelector: selector => selector === '#featured-grid' ? grid : null,

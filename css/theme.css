@@ -35,14 +35,12 @@
   --ornament-gold: linear-gradient(120deg, #A77B36 0%, #F1D99A 50%, #B68B45 100%);
   --shadow-card: 0 16px 38px rgb(89 15 25 / 10%);
   --shadow-strong: 0 24px 54px rgb(89 15 25 / 22%);
-  --hero-title-size: clamp(2.35rem, 1.45rem + 4.5vw, 5.5rem);
+  --hero-title-size: clamp(2.6rem, 1.7rem + 4vw, 5.75rem);
   --font-heading: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --font-body: 'DM Sans', Arial, Helvetica, sans-serif;
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 26px;
-  --hero-image: url('../assets/images/hero/placeholder.svg');
-  --hero-image-mobile: var(--hero-image);
   --detail-color-1: #FFF9F6;
   --detail-color-2: #FBE6E7;
   --detail-color-3: #FFF9F6;

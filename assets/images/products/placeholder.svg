@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="675" viewBox="0 0 900 675"><rect width="900" height="675" fill="#ede6dc"/><circle cx="450" cy="290" r="135" fill="#d3c3ad"/><circle cx="450" cy="290" r="105" fill="#faf7f2"/><path d="M420 245v90m20-90v90m-10-90v150m65-150v150" stroke="#78624c" stroke-width="8" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120">
+  <rect width="160" height="120" fill="#FBE6E7"/>
+  <g fill="none" stroke="#761522" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M57 47h44v12a22 22 0 0 1-44 0Zm44 3h5a7 7 0 0 1 0 14h-6M52 84h56"/>
+    <path d="M74 39c-6-7 6-8 0-15m12 15c-6-7 6-8 0-15"/>
+  </g>
+  <text x="80" y="105" text-anchor="middle" fill="#761522" font-family="sans-serif" font-size="18">Foto pendiente</text>
+</svg>

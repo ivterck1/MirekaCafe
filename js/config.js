@@ -7,10 +7,9 @@ const siteConfig = {
   },
   whatsapp: { number: "525562524763", enabled: false },
   hero: {
-    eyebrow: "Tu menú, a un mensaje",
-    title: "Elige tu próximo antojo.",
-    highlight: "Pide a tu manera.",
-    description: "Explora el menú de Mireka Café."
+    eyebrow: "Mireka Café · Cafetería de Autor",
+    title: "El sabor de tus mejores momentos.",
+    description: "Café, bebidas y antojos para disfrutar a tu manera."
   },
   contact: {
     hours: "Lunes a sábado, 9:00 a 21:00",
@@ -31,7 +30,7 @@ const siteConfig = {
   },
   images: {
     logo: "assets/images/brand/mireka-logo.png",
-    hero: "assets/images/hero/placeholder.svg",
-    productPlaceholder: "assets/images/products/placeholder.svg"
+    hero: "assets/images/hero/mireka-hero-desktop.webp",
+    productPlaceholder: "assets/images/products/placeholder.svg?v=1.0.12"
   }
 };

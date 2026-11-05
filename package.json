@@ -6,7 +6,7 @@
     "menu:generate": "node tools/import-menu.cjs",
     "menu:write": "node tools/import-menu.cjs --write",
     "test": "node --test tests/import-menu.test.cjs tests/featured.test.cjs",
-    "test:site": "node tests/smoke.cjs"
+    "test:site": "node --test tests/product-images.test.cjs && node tests/smoke.cjs"
   },
   "devDependencies": {
     "exceljs": "4.4.0",
