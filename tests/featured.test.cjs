@@ -6,7 +6,7 @@ const vm = require('node:vm');
 function render(items) {
   const element = () => ({children: [], dataset: {}, addEventListener() {}, append(...nodes) { this.children.push(...nodes); }, replaceChildren(...nodes) { this.children = nodes; }});
   const grid = element();
-  const context = vm.createContext({document: {
+  const context = vm.createContext({window: { matchMedia() {} }, document: {
     querySelector: selector => selector === '#featured-grid' ? grid : null,
     querySelectorAll: () => [],
     createElement: element,

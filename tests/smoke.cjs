@@ -57,22 +57,49 @@ async function checkSite(browser, width) {
     assert.equal(await page.locator('meta[property="og:title"]').getAttribute('content'), await page.title());
     assert.equal(await page.evaluate(() => menuItems.length), 101);
     const categories = page.locator('[data-category]');
+    const categorySelect = page.locator('#category-select');
+    const categoryStatus = page.locator('#category-status');
     assert.equal(await categories.count(), 18);
-    for (const category of await categories.all()) {
-      await category.click();
-      assert.ok(await page.locator('.menu-card').count() > 0);
+    const categoryNames = await categories.allTextContents();
+    assert.deepEqual(await categorySelect.locator('option').allTextContents(), categoryNames);
+    for (const name of [...categoryNames].reverse()) {
+      await categorySelect.selectOption(name);
+      const selected = categories.filter({ hasText: name });
+      assert.equal(await selected.getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.locator('[data-category][aria-pressed="true"]').count(), 1);
+      const count = await page.locator('.menu-card').count();
+      assert.ok(count > 0);
+      assert.equal(await categoryStatus.innerText(), `${name} · ${count} ${count === 1 ? 'producto' : 'productos'}`);
     }
+    await categories.last().click();
+    assert.equal(await categorySelect.inputValue(), categoryNames.at(-1));
     await categories.first().click();
+    assert.equal(await categorySelect.inputValue(), categoryNames[0]);
     assert.equal(await page.locator('#featured-grid h3').count(), 3);
     assert.doesNotMatch(await page.locator('#menu-grid, #featured-grid').allTextContents().then(parts => parts.join(' ')), /\$1\.00/);
     assert.match(await page.locator('#catalog-price-status').innerText(), /precios están pendientes/);
 
     const send = page.locator('.whatsapp-button');
     const address = page.locator('#customer-address');
+    const dialog = page.locator('#mobile-cart-dialog');
+    const toggle = page.locator('#mobile-order-toggle');
+    const close = page.locator('#mobile-order-close');
     const openCart = async () => {
       if (width < 768) await page.locator('#mobile-order-toggle').click();
     };
     await page.locator('.menu-card button').first().click();
+    if (width >= 768 && width < 1024) {
+      assert.equal(await toggle.isVisible(), false);
+      await page.locator('.header-cart').click();
+      await page.waitForURL('**/#carrito');
+      await page.waitForFunction(() => {
+        const top = document.querySelector('#carrito').getBoundingClientRect().top;
+        return top >= document.querySelector('.site-header').getBoundingClientRect().bottom
+          && top < innerHeight;
+      });
+      assert.equal(await dialog.evaluate(el => el.open), false);
+      assert.notEqual(await page.evaluate(() => getComputedStyle(document.body).overflowY), 'hidden');
+    }
     for (const link of await page.locator('[data-order-link]').all()) {
       assert.equal(await link.getAttribute('href'), '#pedido');
       if (await link.isVisible()) await link.click();
@@ -80,6 +107,22 @@ async function checkSite(browser, width) {
       if (width < 768) await page.locator('#mobile-order-close').click();
     }
     await openCart();
+    if (width < 768) {
+      assert.equal(await dialog.evaluate(el => el.matches(':modal')), true);
+      assert.equal(await close.evaluate(el => el === document.activeElement), true);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.body).overflowY), 'hidden');
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await page.locator('#order-notes').evaluate(el => el === document.activeElement), true);
+      await page.keyboard.press('Tab');
+      assert.equal(await close.evaluate(el => el === document.activeElement), true);
+      await page.locator('#customer-name').fill('Ana Prueba');
+      await page.keyboard.press('Escape');
+      assert.equal(await dialog.evaluate(el => el.open), false);
+      assert.equal(await toggle.evaluate(el => el === document.activeElement), true);
+      assert.notEqual(await page.evaluate(() => getComputedStyle(document.body).overflowY), 'hidden');
+      await openCart();
+      assert.equal(await page.locator('#customer-name').inputValue(), 'Ana Prueba');
+    }
     assert.equal(await page.locator('#cart-total').innerText(), '—');
     assert.doesNotMatch(await page.locator('#cart-items').innerText(), /\$1\.00/);
     assert.equal(await send.isDisabled(), true);
@@ -102,9 +145,15 @@ async function checkSite(browser, width) {
     assert.equal(await page.locator('#header-cart-count').innerText(), '1');
     await openCart();
     assert.match(await page.locator('#cart-total').innerText(), /65\.00/);
-    await page.locator('[data-action="increase"]').click();
+    const increase = page.locator('[data-action="increase"]');
+    const decrease = page.locator('[data-action="decrease"]');
+    await increase.focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await increase.evaluate(el => el === document.activeElement), true);
     assert.equal(await page.evaluate(() => calculateCartSubtotal()), 130);
-    await page.locator('[data-action="decrease"]').click();
+    await decrease.focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await decrease.evaluate(el => el === document.activeElement), true);
     assert.equal(await page.evaluate(() => calculateCartSubtotal()), 65);
 
     await page.locator('#customer-name').fill('Ana Prueba');
@@ -151,7 +200,7 @@ async function checkSite(browser, width) {
 (async () => {
   const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   try {
-    for (const width of [1440, 390, 375]) await checkSite(browser, width);
+    for (const width of [1440, 1023, 768, 390, 375]) await checkSite(browser, width);
   } finally {
     await browser.close();
   }

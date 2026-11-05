@@ -19,10 +19,6 @@ body {
   line-height: 1.45;
 }
 
-body.order-panel-open {
-  overflow: hidden;
-}
-
 img {
   display: block;
   max-width: 100%;
@@ -35,6 +31,7 @@ a {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -47,6 +44,7 @@ a {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
+select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid var(--detail-color-11);
   outline-offset: 3px;
@@ -599,18 +597,44 @@ textarea:focus-visible {
   padding: 1rem;
 }
 
+.category-picker {
+  display: grid;
+  gap: 0.35rem;
+  width: min(100%, 22rem);
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+}
+
+.category-picker select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--detail-color-33);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
 .category-list {
   display: flex;
   gap: 0.55rem;
-  margin: 0 0 1rem;
-  padding: 0.15rem 0 0.7rem;
+  margin: 0 -0.5rem;
+  padding: 0.5rem;
+  scroll-padding-inline: 0.5rem;
   overflow-x: auto;
   scrollbar-width: thin;
+}
+
+.category-status {
+  margin: 0.4rem 0 1rem;
+  color: var(--color-muted);
+  font-size: 0.88rem;
 }
 
 .category-list button {
   display: inline-flex;
   flex: 0 0 auto;
+  max-width: 100%;
   min-height: 54px;
   align-items: center;
   justify-content: center;
@@ -663,7 +687,7 @@ textarea:focus-visible {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .menu-grid > [role="status"] {
+    .menu-empty {
       grid-column: 1 / -1;
     }
   }
@@ -761,6 +785,11 @@ button:disabled {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
+}
+
+.cart-panel,
+.order-form-section {
+  scroll-margin-top: 6.5rem;
 }
 
 .cart-panel-header {
@@ -1187,43 +1216,49 @@ img[data-image-state="unavailable"] {
   font-weight: 950;
 }
 
-.mobile-panel-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 54;
-  pointer-events: none;
-  background: var(--detail-color-18);
-  transition: background 180ms ease;
-}
-
-body.order-panel-open .mobile-panel-backdrop {
-  pointer-events: auto;
+.mobile-cart-dialog::backdrop {
   background: var(--detail-color-24);
 }
 
-@media (max-width: 767px) {
-  .cart-panel {
-    position: fixed;
-    right: 1rem;
-    bottom: calc(1rem + env(safe-area-inset-bottom));
-    left: 1rem;
-    z-index: 60;
-    max-height: min(82vh, 720px);
-    overflow: auto;
-    visibility: hidden;
-    pointer-events: none;
-    transform: translateY(calc(100% + 2rem));
-    transition: transform 220ms ease;
+@media (width < 768px) {
+  body:has(.mobile-cart-dialog[open]) {
+    overflow: hidden;
   }
 
-  body.order-panel-open .cart-panel {
-    visibility: visible;
-    pointer-events: auto;
-    transform: translateY(0);
+  .menu-order-layout > .cart-panel {
+    display: none;
+  }
+
+  .mobile-cart-dialog {
+    position: fixed;
+    inset: auto 0 calc(1rem + env(safe-area-inset-bottom));
+    width: calc(100% - 2rem);
+    max-width: none;
+    max-height: none;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  .mobile-cart-dialog .cart-panel {
+    max-height: min(82svh, 720px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scroll-padding-top: 5rem;
+  }
+
+  .mobile-cart-dialog .cart-panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface);
   }
 
   .mobile-panel-close {
     display: inline-grid;
+    flex: 0 0 44px;
     width: 44px;
     height: 44px;
     place-items: center;
@@ -1233,6 +1268,12 @@ body.order-panel-open .mobile-panel-backdrop {
     background: var(--color-surface);
     font-size: 1.6rem;
     cursor: pointer;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-order-bar {
+    display: none;
   }
 }
 
@@ -1345,11 +1386,6 @@ body.order-panel-open .mobile-panel-backdrop {
 
   .cart-item {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .mobile-order-bar,
-  .mobile-panel-backdrop {
-    display: none;
   }
 
   .footer-content {

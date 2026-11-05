@@ -16,10 +16,10 @@
     <meta property="og:type" content="website">
     <link rel="icon" href="assets/images/brand/placeholder.svg?v=1.0.1" sizes="any">
     <link rel="stylesheet" href="css/theme.css?v=1.0.11">
-    <link rel="stylesheet" href="css/styles.css?v=1.0.13">
+    <link rel="stylesheet" href="css/styles.css?v=1.0.14">
     <script src="js/config.js?v=1.0.12" defer></script>
     <script src="js/menu-data.js?v=1.0.2" defer></script>
-    <script src="js/app.js?v=1.0.13" defer></script>
+    <script src="js/app.js?v=1.0.14" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -118,12 +118,17 @@
             </div>
 
             <p id="catalog-price-status" hidden></p>
+            <div class="category-picker">
+              <label for="category-select">Ir a una categoría</label>
+              <select id="category-select" aria-controls="menu-grid"></select>
+            </div>
             <div class="category-list" role="group" aria-label="Categorías del menú"></div>
+            <p class="category-status" id="category-status" role="status" aria-atomic="true"></p>
 
             <div class="menu-grid" id="menu-grid" aria-label="Platillos disponibles"></div>
           </div>
 
-          <aside class="cart-panel" id="carrito" aria-labelledby="cart-title">
+          <aside class="cart-panel" id="carrito" aria-labelledby="cart-title" tabindex="-1">
             <div class="cart-panel-header">
               <div class="section-title compact-title">
                 <span aria-hidden="true"></span>
@@ -155,7 +160,7 @@
               </div>
             </div>
 
-            <section class="order-form-section" id="pedido" aria-labelledby="order-title">
+            <section class="order-form-section" id="pedido" aria-labelledby="order-title" tabindex="-1">
               <h2 id="order-title">Datos del cliente</h2>
               <form class="order-form">
                 <label for="customer-name">Nombre</label>
@@ -227,10 +232,10 @@
       </div>
     </footer>
 
-    <div class="mobile-panel-backdrop" id="mobile-panel-backdrop" aria-hidden="true"></div>
+    <dialog class="mobile-cart-dialog" id="mobile-cart-dialog" aria-labelledby="cart-title"></dialog>
 
     <div class="mobile-order-bar" id="mobile-order-bar" hidden>
-      <button class="mobile-order-toggle" id="mobile-order-toggle" type="button" aria-controls="carrito" aria-expanded="false">
+      <button class="mobile-order-toggle" id="mobile-order-toggle" type="button" aria-controls="mobile-cart-dialog" aria-haspopup="dialog" aria-expanded="false">
         <span class="mobile-order-count" id="mobile-order-count">0 productos</span>
         <strong id="mobile-order-total">—</strong>
         <span>Ver pedido</span>

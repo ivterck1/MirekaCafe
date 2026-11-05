@@ -1,5 +1,9 @@
 const menuGrid = document.querySelector("#menu-grid");
 const categoryList = document.querySelector(".category-list");
+const categorySelect = document.querySelector("#category-select");
+const categoryStatus = document.querySelector("#category-status");
+const cartPanel = document.querySelector("#carrito");
+const cartHome = cartPanel?.parentElement;
 const cartItemsContainer = document.querySelector("#cart-items");
 const emptyCartMessage = document.querySelector("#empty-cart");
 const cartSubtotalElement = document.querySelector("#cart-subtotal");
@@ -10,10 +14,12 @@ const headerCartCountElement = document.querySelector("#header-cart-count");
 const mobileOrderBar = document.querySelector("#mobile-order-bar");
 const mobileOrderToggle = document.querySelector("#mobile-order-toggle");
 const mobileOrderClose = document.querySelector("#mobile-order-close");
-const mobilePanelBackdrop = document.querySelector("#mobile-panel-backdrop");
+const mobileCartDialog = document.querySelector("#mobile-cart-dialog");
+const mobileCartViewport = window.matchMedia("(width < 768px)");
 const mobileOrderCountElement = document.querySelector("#mobile-order-count");
 const mobileOrderTotalElement = document.querySelector("#mobile-order-total");
 const mobilePanelLinks = document.querySelectorAll('a[href="#pedido"], a[href="#carrito"]');
+let cartOpener = null;
 const APP_CART_STORAGE_KEY = siteConfig.order.storageKey;
 // Sustituir por el numero real con codigo de pais, sin +, espacios ni guiones.
 const RESTAURANT_WHATSAPP_NUMBER = siteConfig.whatsapp.number;
@@ -265,7 +271,7 @@ function createMenuCard(product) {
 // Pinta los productos disponibles o informa cuando la categoria esta vacia.
 function renderMenu(products) {
   if (!menuGrid) {
-    return;
+    return 0;
   }
 
   menuGrid.innerHTML = "";
@@ -274,15 +280,16 @@ function renderMenu(products) {
 
   if (availableProducts.length === 0) {
     const emptyMessage = document.createElement("p");
-    emptyMessage.setAttribute("role", "status");
+    emptyMessage.className = "menu-empty";
     emptyMessage.textContent = "No hay productos disponibles en esta categoría.";
     menuGrid.append(emptyMessage);
-    return;
+    return 0;
   }
 
   availableProducts.forEach((product) => {
     menuGrid.append(createMenuCard(product));
   });
+  return availableProducts.length;
 }
 
 // Compara categorias sin depender de espacios accidentales en los datos.
@@ -292,13 +299,28 @@ function getProductsByCategory(category) {
 
 // Sincroniza la categoria seleccionada y muestra solo sus productos.
 function selectCategory(category) {
+  categorySelect.value = category;
   categoryList.querySelectorAll("button[data-category]").forEach((button) => {
     const isActive = button.dataset.category === category;
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
+    if (isActive) revealCategoryButton(button);
   });
 
-  renderMenu(getProductsByCategory(category));
+  const count = renderMenu(getProductsByCategory(category));
+  categoryStatus.textContent = `${category} · ${count} ${count === 1 ? "producto" : "productos"}`;
+}
+
+// Desplaza solo la fila, sin mover el foco ni la página.
+function revealCategoryButton(button) {
+  const rail = categoryList.getBoundingClientRect();
+  const bounds = button.getBoundingClientRect();
+  const inset = 7;
+  if (bounds.left < rail.left + inset) {
+    categoryList.scrollLeft += bounds.left - rail.left - inset;
+  } else if (bounds.right > rail.right - inset) {
+    categoryList.scrollLeft += bounds.right - rail.right + inset;
+  }
 }
 
 // Atiende la seleccion con mouse o teclado mediante botones nativos.
@@ -534,10 +556,6 @@ function updateOrderIndicators() {
   if (mobileOrderBar) {
     mobileOrderBar.hidden = itemCount === 0;
   }
-
-  if (itemCount === 0) {
-    closeMobileOrderPanel();
-  }
 }
 
 // Crea la parte informativa de un producto en el carrito.
@@ -649,6 +667,8 @@ function renderCart() {
     return;
   }
 
+  const focusedButton = document.activeElement?.closest("button[data-action]");
+  const previousAction = cartItemsContainer.contains(focusedButton) ? focusedButton.dataset : null;
   cartItemsContainer.innerHTML = "";
 
   if (cartItems.length === 0) {
@@ -665,6 +685,14 @@ function renderCart() {
   cartTotalElement.textContent = formatPrice(subtotal);
   updateWhatsAppButtonState();
   updateOrderIndicators();
+
+  if (previousAction) {
+    const buttons = [...cartItemsContainer.querySelectorAll("button[data-action]")];
+    const replacement = buttons.find(({ dataset }) =>
+      dataset.action === previousAction.action && dataset.productId === previousAction.productId
+    );
+    (replacement ?? buttons[0] ?? (mobileCartDialog.open ? mobileOrderClose : cartPanel)).focus();
+  }
 }
 
 // Atiende clicks en botones "Agregar" del menu usando delegacion de eventos.
@@ -723,28 +751,57 @@ function handleWhatsAppClick() {
 }
 
 // Abre el panel movil del pedido sin alterar el carrito.
-function openMobileOrderPanel() {
-  document.body.classList.add("order-panel-open");
+function openMobileOrderPanel(opener) {
+  if (!mobileCartViewport.matches || mobileCartDialog.open) return;
+  cartOpener = opener;
+  mobileCartDialog.append(cartPanel);
+  mobileCartDialog.showModal();
   mobileOrderToggle?.setAttribute("aria-expanded", "true");
   mobileOrderClose?.focus();
 }
 
 // Cierra el panel movil del pedido conservando productos y formulario.
 function closeMobileOrderPanel() {
-  const wasOpen = document.body.classList.contains("order-panel-open");
-  document.body.classList.remove("order-panel-open");
+  if (!mobileCartDialog.open) return;
+  mobileCartDialog.close();
+  cartHome.append(cartPanel);
   mobileOrderToggle?.setAttribute("aria-expanded", "false");
-  if (wasOpen) document.querySelector(".header-cart")?.focus();
+  const target = cartOpener?.getClientRects().length ? cartOpener : document.querySelector(".header-cart");
+  target?.focus({ preventScroll: true });
+  cartOpener = null;
 }
 
 // Abre el panel movil desde la barra inferior o accesos al pedido.
 function handleMobilePanelRequest(event) {
-  if (!window.matchMedia("(max-width: 767px)").matches) {
+  if (!mobileCartViewport.matches) {
     return;
   }
 
   event.preventDefault();
-  openMobileOrderPanel();
+  openMobileOrderPanel(event.currentTarget);
+}
+
+function keepCartTabInside(event) {
+  if (event.key !== "Tab") return;
+  const controls = [...mobileCartDialog.querySelectorAll("a[href], button:enabled, input:enabled, select:enabled, textarea:enabled")]
+    .filter((control) => control.getClientRects().length);
+  const first = controls[0];
+  const last = controls.at(-1);
+  const boundary = event.shiftKey ? first : last;
+  if (document.activeElement !== boundary) return;
+  event.preventDefault();
+  (event.shiftKey ? last : first)?.focus();
+}
+
+function syncCartViewport() {
+  if (!mobileCartViewport.matches) closeMobileOrderPanel();
+  mobilePanelLinks.forEach((link) => {
+    if (mobileCartViewport.matches) {
+      link.setAttribute("aria-haspopup", "dialog");
+    } else {
+      link.removeAttribute("aria-haspopup");
+    }
+  });
 }
 
 // Inicia la interfaz solo si existen los contenedores necesarios.
@@ -753,9 +810,6 @@ function initializeApp() {
     return;
   }
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeMobileOrderPanel();
-  });
   applySiteConfig();
   renderDeliveryOptions();
   document.querySelector(".order-form").addEventListener("submit", (event) => event.preventDefault());
@@ -776,20 +830,29 @@ function initializeApp() {
 
   menuGrid.addEventListener("click", handleMenuClick);
   categoryList.addEventListener("click", handleCategoryClick);
+  categoryList.addEventListener("focusin", (event) => revealCategoryButton(event.target));
+  categorySelect.addEventListener("change", () => selectCategory(categorySelect.value));
   cartItemsContainer.addEventListener("click", handleCartClick);
   whatsappButton.addEventListener("click", handleWhatsAppClick);
 
   if (mobileOrderToggle) {
-    mobileOrderToggle.addEventListener("click", openMobileOrderPanel);
+    mobileOrderToggle.addEventListener("click", handleMobilePanelRequest);
   }
 
   if (mobileOrderClose) {
     mobileOrderClose.addEventListener("click", closeMobileOrderPanel);
   }
 
-  if (mobilePanelBackdrop) {
-    mobilePanelBackdrop.addEventListener("click", closeMobileOrderPanel);
-  }
+  mobileCartDialog.addEventListener("keydown", keepCartTabInside);
+  mobileCartDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeMobileOrderPanel();
+  });
+  mobileCartDialog.addEventListener("click", (event) => {
+    if (event.target === mobileCartDialog) closeMobileOrderPanel();
+  });
+  mobileCartViewport.addEventListener("change", syncCartViewport);
+  syncCartViewport();
 
   mobilePanelLinks.forEach((link) => {
     link.addEventListener("click", handleMobilePanelRequest);
@@ -846,6 +909,8 @@ function applySiteConfig() {
 function renderCategories() {
   const categories = [...new Set(menuItems.map((product) => product.categoria.trim()))];
   categoryList.replaceChildren();
+  categorySelect.replaceChildren();
+  categorySelect.disabled = categories.length === 0;
   categories.forEach((category) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -853,9 +918,16 @@ function renderCategories() {
     button.textContent = category;
     button.setAttribute('aria-controls', 'menu-grid');
     categoryList.append(button);
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    categorySelect.append(option);
   });
   if (categories.length) selectCategory(categories[0]);
-  else renderMenu([]);
+  else {
+    renderMenu([]);
+    categoryStatus.textContent = "";
+  }
 }
 
 function renderFeaturedProducts() {
