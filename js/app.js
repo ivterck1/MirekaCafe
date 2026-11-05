@@ -825,6 +825,7 @@ function initializeApp() {
   }
   renderCategories();
   renderFeaturedProducts();
+  document.querySelector("#featured-grid").addEventListener("keydown", handleFeaturedNavigation);
   restoreCartItems(loadCartFromStorage());
   renderCart();
 
@@ -928,6 +929,25 @@ function renderCategories() {
     renderMenu([]);
     categoryStatus.textContent = "";
   }
+}
+
+function handleFeaturedNavigation(event) {
+  const grid = event.currentTarget;
+  if (event.target !== grid || !["ArrowLeft", "ArrowRight"].includes(event.key)
+      || grid.scrollWidth <= grid.clientWidth) return;
+
+  const cards = [...grid.children];
+  const maxScroll = grid.scrollWidth - grid.clientWidth;
+  const positions = [...new Set(cards.map((card) =>
+    Math.min(maxScroll, card.offsetLeft - cards[0].offsetLeft)
+  ))];
+  const current = positions.reduce((nearest, left, index) =>
+    Math.abs(left - grid.scrollLeft) < Math.abs(positions[nearest] - grid.scrollLeft) ? index : nearest, 0
+  );
+  const direction = event.key === "ArrowRight" ? 1 : -1;
+  const next = Math.max(0, Math.min(positions.length - 1, current + direction));
+  event.preventDefault();
+  grid.scrollTo({ left: positions[next] });
 }
 
 function renderFeaturedProducts() {

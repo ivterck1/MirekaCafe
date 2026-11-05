@@ -491,6 +491,12 @@ textarea:focus-visible {
   overflow-x: auto;
   padding: 0.15rem 0.15rem 1rem;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+}
+
+.specialties-grid:focus-visible {
+  outline: 3px solid var(--detail-color-11);
+  outline-offset: 3px;
 }
 
 .specialty-card {
@@ -1401,6 +1407,14 @@ img[data-image-state="unavailable"] {
 @media (min-width: 1280px) {
   .section {
     padding-block: 3rem;
+  }
+
+  .specialties-section {
+    padding-bottom: 1.75rem;
+  }
+
+  .menu-order-section {
+    padding-top: 1.5rem;
   }
 }
 
