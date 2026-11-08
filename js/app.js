@@ -804,6 +804,166 @@ function syncCartViewport() {
   });
 }
 
+// Mantiene anclas nativas e historial; el scroll manual solo actualiza el header.
+function initializeSiteNavigation() {
+  const header = document.querySelector(".site-header");
+  const links = [...document.querySelectorAll('.nav-links a[href^="#"]')];
+  const entries = links.map((link) => ({
+    link,
+    target: document.getElementById(link.hash.slice(1)),
+  })).filter(({ target }) => target);
+  if (!header || !entries.length) return;
+
+  let active = null;
+  let requested = null;
+  let anchored = null;
+  let anchorTarget = null;
+  let frame = 0;
+  let settleTimer = 0;
+  let forceUpdate = false;
+  let homeFrame = 0;
+
+  function markActive(entry) {
+    active = entry;
+    entries.forEach(({ link }) => {
+      const selected = link === entry?.link;
+      link.classList.toggle("is-active", selected);
+      if (selected) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+  }
+
+  function update() {
+    frame = 0;
+    const force = forceUpdate;
+    forceUpdate = false;
+    const modalEntry = mobileCartDialog.open
+      ? entries.find(({ target }) => mobileCartDialog.contains(target)) : null;
+    if (modalEntry || requested) {
+      markActive(modalEntry ?? requested);
+      return;
+    }
+
+    const headerBottom = header.getBoundingClientRect().bottom;
+    // Un destino dentro del carrito lateral puede quedar visible sin alcanzar
+    // el borde superior del documento, porque tiene su propio scroll.
+    if (anchored?.target.closest("aside")) {
+      const target = anchorTarget ?? anchored.target;
+      const bounds = target.getBoundingClientRect();
+      if (target.getClientRects().length && bounds.top >= headerBottom && bounds.top < innerHeight) {
+        markActive(anchored);
+        return;
+      }
+    }
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--anchor-gap")) || 0;
+    const line = headerBottom + gap;
+    const visible = entries.filter(({ target }) => target.getClientRects().length);
+    const passed = visible.filter(({ target }) => target.getBoundingClientRect().top <= line + 1);
+    const candidate = passed.sort((a, b) =>
+      b.target.getBoundingClientRect().top - a.target.getBoundingClientRect().top
+    )[0] ?? visible[0];
+
+    // Una banda de 8 px evita alternancias por pequeños movimientos del borde.
+    if (!force && active && candidate && candidate !== active) {
+      const boundary = active.target.compareDocumentPosition(candidate.target) & Node.DOCUMENT_POSITION_FOLLOWING
+        ? candidate.target : active.target;
+      if (Math.abs(boundary.getBoundingClientRect().top - line) < 8) return;
+    }
+    markActive(candidate);
+  }
+
+  function schedule(force = false) {
+    forceUpdate ||= force;
+    if (!frame) frame = requestAnimationFrame(update);
+  }
+
+  function finishNavigation() {
+    clearTimeout(settleTimer);
+    requested = null;
+    schedule(true);
+  }
+
+  function cancelNavigation() {
+    cancelAnimationFrame(homeFrame);
+    anchored = null;
+    anchorTarget = null;
+    finishNavigation();
+  }
+
+  function requestDestination(hash) {
+    let destination;
+    try { destination = document.getElementById(decodeURIComponent(hash.slice(1))); }
+    catch { return; }
+    if (!destination) {
+      if (!hash && mobileCartDialog.open) closeMobileOrderPanel();
+      cancelNavigation();
+      return;
+    }
+    if (destination.id === "inicio") {
+      // Chrome puede aplicar un frame del scroll anterior después del salto
+      // nativo. Reiniciar Inicio tras ese salto evita conservar ese desplazamiento.
+      cancelAnimationFrame(homeFrame);
+      homeFrame = requestAnimationFrame(() => {
+        if (location.hash !== "#inicio") return;
+        const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+        window.scrollTo({ top: 0, behavior });
+      });
+    }
+    // Volver al resumen no debe conservar un título oculto por el scroll interno.
+    if (destination === cartPanel) cartPanel.scrollTop = 0;
+    if (mobileCartViewport.matches && cartPanel.contains(destination)) {
+      openMobileOrderPanel(document.querySelector(".header-cart"));
+      schedule(true);
+      return;
+    }
+    if (mobileCartDialog.open) closeMobileOrderPanel();
+    requested = entries.find(({ target }) => target === destination)
+      ?? entries.find(({ target }) => destination.contains(target))
+      ?? entries.find(({ target }) => target.contains(destination));
+    if (!requested) return;
+    anchored = requested;
+    anchorTarget = destination;
+    schedule(true);
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(finishNavigation, 180);
+  }
+
+  function onScroll() {
+    schedule();
+    if (requested) {
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(finishNavigation, 180);
+    }
+  }
+
+  function measureHeader() {
+    document.documentElement.style.setProperty("--header-height", `${header.getBoundingClientRect().height}px`);
+    schedule(true);
+  }
+
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    requestDestination(link.hash);
+  });
+  window.addEventListener("hashchange", () => requestDestination(location.hash));
+  window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+  window.addEventListener("resize", measureHeader, { passive: true });
+  window.addEventListener("wheel", cancelNavigation, { passive: true });
+  window.addEventListener("touchstart", cancelNavigation, { passive: true });
+  window.addEventListener("pointerdown", (event) => {
+    if (event.target === document.documentElement) cancelNavigation();
+  }, { passive: true });
+  document.addEventListener("keydown", (event) => {
+    if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(event.key)) cancelNavigation();
+  });
+  new ResizeObserver(measureHeader).observe(header);
+  new MutationObserver(() => { requested = null; anchored = null; anchorTarget = null; schedule(true); })
+    .observe(mobileCartDialog, { attributes: true, attributeFilter: ["open"] });
+  measureHeader();
+  if (location.hash) requestDestination(location.hash);
+}
+
 // Inicia la interfaz solo si existen los contenedores necesarios.
 function initializeApp() {
   if (!menuGrid || !categoryList || !cartItemsContainer || !whatsappButton) {
@@ -858,6 +1018,8 @@ function initializeApp() {
   mobilePanelLinks.forEach((link) => {
     link.addEventListener("click", handleMobilePanelRequest);
   });
+
+  initializeSiteNavigation();
 
   console.log("Carrito listo para agregar productos.");
 }

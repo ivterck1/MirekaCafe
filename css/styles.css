@@ -1,11 +1,16 @@
 /* Layout, componentes y responsive comunes. Identidad en theme.css. */
-:root { --container: 1240px; }
+:root {
+  --container: 1240px;
+  --header-height: 78px;
+  --anchor-gap: 8px;
+}
 * {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-height) + var(--anchor-gap));
 }
 
 body {
@@ -580,7 +585,6 @@ textarea:focus-visible {
 
 .menu-order-section {
   padding-top: 1.2rem;
-  scroll-margin-top: 6.5rem;
 }
 
 .menu-order-layout {
@@ -791,11 +795,6 @@ button:disabled {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-}
-
-.cart-panel,
-.order-form-section {
-  scroll-margin-top: 6.5rem;
 }
 
 .cart-panel-header {
@@ -1358,6 +1357,8 @@ img[data-image-state="unavailable"] {
 }
 
 @media (min-width: 1024px) {
+  :root { --header-height: 98px; }
+
   .main-nav {
     grid-template-columns: auto minmax(0, 1fr) auto;
     padding: 0.25rem 1rem;
