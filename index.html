@@ -16,11 +16,11 @@
     >
     <meta property="og:type" content="website">
     <link rel="icon" href="assets/images/brand/placeholder.svg?v=1.0.1" sizes="any">
-    <link rel="stylesheet" href="css/theme.css?v=1.0.11">
-    <link rel="stylesheet" href="css/styles.css?v=1.0.19">
+    <link rel="stylesheet" href="css/theme.css?v=1.0.20">
+    <link rel="stylesheet" href="css/styles.css?v=1.0.20">
     <script src="js/config.js?v=1.0.18" defer></script>
     <script src="js/menu-data.js?v=1.0.2" defer></script>
-    <script src="js/app.js?v=1.0.17" defer></script>
+    <script src="js/app.js?v=1.0.20" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -126,7 +126,7 @@
             <div class="category-list" role="group" aria-label="Categorías del menú"></div>
             <p class="category-status" id="category-status" role="status" aria-atomic="true"></p>
 
-            <div class="menu-grid" id="menu-grid" aria-label="Platillos disponibles"></div>
+            <div class="menu-grid" id="menu-grid" role="group" aria-label="Platillos disponibles"></div>
           </div>
 
           <aside class="cart-panel" id="carrito" aria-labelledby="cart-title" tabindex="-1">
@@ -148,7 +148,7 @@
 
             <div class="cart-summary" aria-live="polite">
               <p class="empty-cart" id="empty-cart">Tu carrito está vacío.</p>
-              <div class="cart-items" id="cart-items" aria-label="Productos en el carrito"></div>
+              <div class="cart-items" id="cart-items" role="group" aria-label="Productos en el carrito"></div>
               <div class="cart-totals">
                 <div class="cart-line">
                   <span>Subtotal</span>
@@ -169,6 +169,7 @@
                   id="customer-name"
                   name="customerName"
                   type="text"
+                  autocomplete="name"
                   placeholder="Ej. Ana López"
                 >
 
@@ -181,6 +182,7 @@
                   id="customer-address"
                   name="customerAddress"
                   type="text"
+                  autocomplete="street-address"
                   placeholder="Calle, número, colonia y referencias"
                 >
 
@@ -234,6 +236,7 @@
     </footer>
 
     <dialog class="mobile-cart-dialog" id="mobile-cart-dialog" aria-labelledby="cart-title"></dialog>
+    <p id="cart-status" class="visually-hidden" role="status"></p>
 
     <div class="mobile-order-bar" id="mobile-order-bar" hidden>
       <button class="mobile-order-toggle" id="mobile-order-toggle" type="button" aria-controls="mobile-cart-dialog" aria-haspopup="dialog" aria-expanded="false">

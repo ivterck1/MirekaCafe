@@ -33,6 +33,7 @@
   --color-line: #E1B8BE;
   --color-gold: #B9954F;
   --ornament-gold: linear-gradient(120deg, #A77B36 0%, #F1D99A 50%, #B68B45 100%);
+  --specialty-text-surface: linear-gradient(180deg, transparent, rgb(89 15 25 / 80%) 1.5rem, rgb(89 15 25 / 96%));
   --shadow-card: 0 16px 38px rgb(89 15 25 / 10%);
   --shadow-strong: 0 24px 54px rgb(89 15 25 / 22%);
   --hero-title-size: clamp(2.6rem, 1.7rem + 4vw, 5.75rem);

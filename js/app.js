@@ -18,8 +18,10 @@ const mobileCartDialog = document.querySelector("#mobile-cart-dialog");
 const mobileCartViewport = window.matchMedia("(width < 768px)");
 const mobileOrderCountElement = document.querySelector("#mobile-order-count");
 const mobileOrderTotalElement = document.querySelector("#mobile-order-total");
+const cartStatus = document.querySelector("#cart-status");
 const mobilePanelLinks = document.querySelectorAll('a[href="#pedido"], a[href="#carrito"]');
 let cartOpener = null;
+let cartAnnouncementTimer = 0;
 const APP_CART_STORAGE_KEY = siteConfig.order.storageKey;
 // Sustituir por el numero real con codigo de pais, sin +, espacios ni guiones.
 const RESTAURANT_WHATSAPP_NUMBER = siteConfig.whatsapp.number;
@@ -345,7 +347,9 @@ function addProductToCart(productId) {
   const existingCartItem = findCartItemById(productId);
 
   if (existingCartItem) {
+    const previousQuantity = existingCartItem.quantity;
     updateCartItemQuantity(productId, 1);
+    if (existingCartItem.quantity > previousQuantity) announceCartAddition(product.nombre);
     return;
   }
 
@@ -358,6 +362,24 @@ function addProductToCart(productId) {
 
   saveCartToStorage();
   renderCart();
+  announceCartAddition(product.nombre);
+}
+
+// El resumen oculto no anuncia altas. Se usa un único estado persistente solo
+// en móvil con panel cerrado; con resumen visible se conserva su aria-live.
+function announceCartAddition(productName) {
+  if (!cartStatus) return;
+  clearTimeout(cartAnnouncementTimer);
+  cartStatus.textContent = "";
+  if (!mobileCartViewport.matches || mobileCartDialog.open) return;
+
+  // Separar el vaciado permite volver a anunciar un mensaje idéntico; las
+  // pulsaciones rápidas se agrupan, sin encolar mensajes ni desplazar el foco.
+  cartAnnouncementTimer = setTimeout(() => {
+    if (!mobileCartViewport.matches || mobileCartDialog.open) return;
+    const count = getCartItemCount();
+    cartStatus.textContent = `${productName} añadido. ${count} ${count === 1 ? "producto" : "productos"} en el pedido.`;
+  }, 50);
 }
 
 // Cambia la cantidad de un producto; si queda en cero, lo elimina.
@@ -618,7 +640,6 @@ function createQuantityControls(item) {
 
   const quantity = document.createElement("span");
   quantity.textContent = item.quantity;
-  quantity.setAttribute("aria-label", `Cantidad: ${item.quantity}`);
 
   const increaseButton = createCartActionButton({
     action: "increase",
