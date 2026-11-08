@@ -9,6 +9,7 @@
 }
 
 html {
+  background: var(--color-background);
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--header-height) + var(--anchor-gap));
 }
@@ -17,9 +18,7 @@ body {
   margin: 0;
   min-width: 320px;
   color: var(--color-text);
-  background:
-    radial-gradient(circle at 12% 8%, var(--detail-color-8), transparent 24rem),
-    linear-gradient(180deg, var(--detail-color-2) 0, var(--color-background) 36rem, var(--detail-color-3) 100%);
+  background: var(--color-background);
   font-family: var(--font-body);
   line-height: 1.45;
 }
@@ -354,10 +353,7 @@ textarea:focus-visible {
   position: relative;
   aspect-ratio: 1.04;
   overflow: hidden;
-}
-
-.hero-media:empty {
-  display: none;
+  background: var(--color-secondary-dark);
 }
 
 .hero-media::after {

@@ -29,7 +29,7 @@ const siteConfig = {
     ]
   },
   images: {
-    logo: "assets/images/brand/mireka-logo.png",
+    logo: "assets/images/brand/mireka-logo-web.webp",
     hero: "assets/images/hero/mireka-hero-desktop.webp",
     productPlaceholder: "assets/images/products/placeholder.svg?v=1.0.12"
   }
