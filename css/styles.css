@@ -1484,6 +1484,8 @@ img[data-image-state="unavailable"] {
 
 h1, h2, .story-card .story-highlight { font-family: var(--font-heading); }
 #business-contact a { display: inline-block; margin: .5rem; }
+#business-contact { overflow-wrap: anywhere; }
+#business-contact .contact-phone { margin: 0; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
 
 .specialty-card strong { color: var(--color-highlight); }

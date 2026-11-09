@@ -6,6 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { renderSeo, synchronize, loadConfig } = require('../tools/sync-seo.cjs');
+const { synchronizeSite } = require('../tools/business-html.cjs');
 const config = loadConfig();
 const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 const title = 'Mireka Café | Cafetería de autor y menú';
@@ -71,11 +72,19 @@ test('variante B: ICO multirresolución y PNG de tamaños explícitos', () => {
 
 test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', async t => {
   const root = path.resolve(__dirname, '..');
+  const fixture = JSON.parse(JSON.stringify(config));
+  fixture.contact.hours = 'Horario de prueba';
+  fixture.contact.phone = '+525500000001';
+  const profiles = {instagram:'https://www.instagram.com/perfil_prueba/',
+    facebook:'https://www.facebook.com/perfil_prueba', tiktok:'https://www.tiktok.com/@perfil_prueba'};
+  Object.assign(fixture.contact, profiles, {verifiedSocial:profiles});
+  const fixtureHtml = synchronizeSite(html, fixture);
   const server = http.createServer((req, res) => {
     try {
-      const pathname = new URL(req.url, 'http://localhost').pathname.replace(/^\/MirekaCafe\//, '/');
+      const requestPath = new URL(req.url, 'http://localhost').pathname;
+      const pathname = requestPath.replace(/^\/(?:MirekaCafe|revision)\//, '/');
       const file = path.join(root, pathname === '/' ? 'index.html' : pathname);
-      const body = fs.readFileSync(file);
+      const body = requestPath === '/revision/' ? fixtureHtml : fs.readFileSync(file);
       res.writeHead(200, { 'Content-Type': ({ '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript',
         '.webp': 'image/webp', '.png': 'image/png', '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' })[path.extname(file)] || 'application/octet-stream' });
       res.end(body);
@@ -92,6 +101,10 @@ test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', 
       try {
         await page.goto(`http://127.0.0.1:${server.address().port}${prefix}`, { waitUntil: 'networkidle' });
         assert.equal(await page.title(), title);
+        assert.equal(await page.locator('#business-contact').count(), 1);
+        assert.match(await page.locator('#business-contact').innerText(), /Lunes a sábado/);
+        assert.equal(await page.locator('#business-contact a').count(), 0);
+        assert.equal(await page.locator('.story-card').getByText(config.business.description, {exact:true}).count(), 1);
         const expected = { description, robots: 'noindex,follow', 'og:title': title, 'og:description': description,
           'og:type': 'website', 'og:site_name': 'Mireka Café', 'og:locale': 'es_MX', 'twitter:card': 'summary',
           'twitter:title': title, 'twitter:description': description };
@@ -137,4 +150,29 @@ test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', 
       } finally { await page.close(); }
     });
   }
+  for (const width of [390, 1440]) await t.test(`contacto y redes verificadas a ${width}px`, async () => {
+    const page = await browser.newPage({viewport:{width, height:900}, javaScriptEnabled:width !== 390});
+    try {
+      await page.goto(`http://127.0.0.1:${server.address().port}/revision/`);
+      const contact = page.getByRole('group', {name:'Datos de contacto'});
+      await contact.scrollIntoViewIfNeeded();
+      assert.match(await contact.innerText(), /Horario de prueba/);
+      assert.equal(await contact.getByRole('link', {name:/Teléfono/}).getAttribute('href'), 'tel:+525500000001');
+      const social = contact.getByRole('navigation', {name:'Redes sociales'});
+      assert.deepEqual(await social.getByRole('link').evaluateAll(links => links.map(link => link.getAttribute('href'))), Object.values(profiles));
+      assert.equal(await contact.evaluate(() => document.documentElement.scrollWidth), width);
+    } finally { await page.close(); }
+  });
+});
+
+test('omite enlaces inválidos o distintos de la URL confirmada y escapa texto comercial', () => {
+  const draft = JSON.parse(JSON.stringify(config));
+  draft.business.description = 'Café <script> de prueba';
+  draft.contact.instagram = 'https://instagram.com/otro';
+  draft.contact.facebook = 'https://facebook.com.ejemplo.test/perfil';
+  draft.contact.tiktok = 'https://www.tiktok.com/@perfil';
+  draft.contact.verifiedSocial = {instagram:'https://instagram.com/perfil', facebook:draft.contact.facebook};
+  const output = synchronizeSite(html, draft);
+  assert.match(output, /Café &lt;script&gt; de prueba/);
+  assert.doesNotMatch(output, /aria-label="Redes sociales"|instagram\.com\/otro|facebook\.com\.ejemplo|tiktok\.com\/@perfil/);
 });

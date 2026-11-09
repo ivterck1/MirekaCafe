@@ -1,0 +1,65 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const {loadConfig} = require('./sync-seo.cjs');
+const {verifiedSocial} = require('./business-preview.cjs');
+
+const keys = {
+  nombre:['business', 'name'], nombre_corto:['business', 'shortName'], descripcion:['business', 'description'],
+  telefono:['contact', 'phone'], whatsapp:['whatsapp', 'number'], horario:['contact', 'hours'],
+  direccion:['contact', 'address'], cobertura:['contact', 'coverage'], instagram:['contact', 'instagram'],
+  facebook:['contact', 'facebook'], tiktok:['contact', 'tiktok'], moneda:['order', 'currency'], locale:['order', 'locale']
+};
+const surfaces = {
+  nombre:['header', 'footer', 'SEO'], nombre_corto:['header', 'footer'],
+  descripcion:['contacto', 'footer', 'SEO editorial'], telefono:['contacto', 'footer'],
+  whatsapp:['pedidos'], horario:['contacto', 'footer'], direccion:['contacto', 'footer'],
+  cobertura:['contacto', 'footer'], instagram:['redes', 'footer'], facebook:['redes', 'footer'],
+  tiktok:['redes', 'footer'], moneda:['catálogo', 'carrito'], locale:['catálogo', 'carrito', 'SEO editorial'],
+  whatsapp_activo:['pedidos'], mostrar_precios:['catálogo', 'carrito']
+};
+
+function loadBusiness(root, source = fs.readFileSync(path.join(root, 'js/config.js'))) {
+  const config = loadConfig(root, source.toString('utf8'));
+  const values = Object.fromEntries(Object.entries(keys).map(([field, [group, key]]) => [field, config[group][key]]));
+  values.whatsapp_activo = config.whatsapp.enabled ? 'SI' : 'NO';
+  values.mostrar_precios = config.order.pricesApproved ? 'SI' : 'NO';
+  return {source, values, config};
+}
+
+function prepareBusiness(root, business, report) {
+  function assertBlocked(config) {
+    if (config.whatsapp.enabled !== false || config.order.pricesApproved !== false) {
+      throw new Error('Los bloqueos de WhatsApp y precios deben estar en false.');
+    }
+  }
+  assertBlocked(business.config);
+  const assignments = [];
+  const impacts = [];
+  for (const change of [...report.cambios, ...report.negocio.solicitudes]) {
+    if (change.hoja !== 'DATOS_NEGOCIO') continue;
+    const {campo, nuevo, tipo} = change;
+    const pending = (['instagram', 'facebook', 'tiktok'].includes(campo) && nuevo &&
+      !verifiedSocial(campo, nuevo, business.config.contact.verifiedSocial)) ||
+      (tipo !== 'modificación' && tipo !== 'borrado propuesto');
+    impacts.push({campo, superficies:surfaces[campo], estado:pending ? 'verificación o autorización pendiente' : 'cambio candidato'});
+    if (pending) continue;
+    const [group, key] = keys[campo];
+    assignments.push(`siteConfig.${group}.${key} = ${JSON.stringify(nuevo)};`);
+    if (campo === 'descripcion') assignments.push(`siteConfig.seo.description = ${JSON.stringify(nuevo)};`);
+    if (campo === 'nombre') {
+      const title = business.config.seo.title;
+      const prefix = business.values.nombre + ' | ';
+      if (title.startsWith(prefix)) {
+        assignments.push(`siteConfig.seo.title = ${JSON.stringify(nuevo + title.slice(business.values.nombre.length))};`);
+      }
+    }
+  }
+  const source = business.source.toString('utf8');
+  const eol = source.includes('\r\n') ? '\r\n' : '\n';
+  const candidate = assignments.length ? source.trimEnd() + eol + eol +
+    ['// Cambios comerciales propuestos desde Excel.', ...assignments, ''].join(eol) : source;
+  assertBlocked(loadConfig(root, candidate));
+  return {candidate, impacts};
+}
+
+module.exports = {loadBusiness, prepareBusiness};

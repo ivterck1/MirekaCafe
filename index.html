@@ -21,10 +21,10 @@
     <link rel="icon" href="assets/images/brand/favicon-96.png?v=1.0.21" type="image/png" sizes="96x96">
     <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=1.0.21" sizes="180x180">
     <link rel="stylesheet" href="css/theme.css?v=1.0.20">
-    <link rel="stylesheet" href="css/styles.css?v=1.0.22">
-    <script src="js/config.js?v=1.0.21" defer></script>
+    <link rel="stylesheet" href="css/styles.css?v=1.0.23">
+    <script src="js/config.js?v=1.0.22" defer></script>
     <script src="js/menu-data.js?v=1.0.2" defer></script>
-    <script src="js/app.js?v=1.0.22" defer></script>
+    <script src="js/app.js?v=1.0.23" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -1142,7 +1142,9 @@
           <div>
             <p class="eyebrow">Conoce el negocio</p>
             <h2 id="story-title">Nuestra historia</h2>
-            <p data-config="business.description">Una propuesta gastronómica para compartir.</p>
+            <!-- BUSINESS-STORY:START -->
+            <p>Cafetería de Autor</p>
+            <!-- BUSINESS-STORY:END -->
             <p class="story-highlight">Elige, revisa y pide.</p>
           </div>
         </div>
@@ -1152,13 +1154,17 @@
 
     <footer class="site-footer">
       <div class="footer-content">
-        <div><p data-config="business.name">Nombre del negocio</p><div id="business-contact"></div></div>
-        <img
-          src="assets/images/brand/mireka-logo-web.webp"
-          alt="Mireka Café"
-          width="768"
-          height="496"
-        >
+        <!-- BUSINESS-FOOTER:START -->
+        <div>
+          <p>Mireka Café</p>
+          <div id="business-contact" role="group" aria-label="Datos de contacto">
+            <p>Lunes a sábado, 9:00 a 21:00</p>
+            <p>Retorno 5 de Manuel Rivera Cambas 32 (al lado de las canchas), Ciudad de México</p>
+            <p>Cobertura de entrega pendiente de confirmación.</p>
+          </div>
+        </div>
+        <img src="assets/images/brand/mireka-logo-web.webp" alt="" width="768" height="496">
+        <!-- BUSINESS-FOOTER:END -->
       </div>
     </footer>
 

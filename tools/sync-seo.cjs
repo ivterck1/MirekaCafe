@@ -57,8 +57,8 @@ function synchronize(html, config) {
     + eol + '    ' + html.slice(html.indexOf(END));
 }
 
-function loadConfig(root = ROOT) {
-  return vm.runInNewContext(fs.readFileSync(path.join(root, 'js/config.js'), 'utf8') + '\nsiteConfig;', {}, { timeout: 1000 });
+function loadConfig(root = ROOT, source = fs.readFileSync(path.join(root, 'js/config.js'), 'utf8')) {
+  return vm.runInNewContext(source + '\nsiteConfig;', {}, { timeout: 1000 });
 }
 
 if (require.main === module) {
@@ -75,4 +75,4 @@ if (require.main === module) {
     console.log(mode === '--check' ? 'SEO inicial sincronizado.' : 'Bloque SEO sincronizado; resto del HTML conservado.');
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }
-module.exports = { renderSeo, synchronize, loadConfig };
+module.exports = { renderSeo, synchronize, loadConfig, escape };

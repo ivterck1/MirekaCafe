@@ -68,3 +68,61 @@ No instalar npm en producción. El Excel, tools, tests, templates, node_modules 
 ## Pruebas y publicación
 
 Ejecutar npm test y el flujo del README a 1440, 390 y 375 px. Comprobar categorías, especialidades, precios, carrito, cantidades, eliminación, persistencia, formulario y URL de WhatsApp interceptada sin enviar pedidos. Revisar consola, 404 y scroll horizontal. Comprobar también el catálogo importado en una copia del sitio y resolver fotos pendientes. Incrementar ?v= antes de publicar cambios relevantes; publicar únicamente index.html, css, js y assets.
+## Vista previa de Mireka Café v2
+
+La Fase 3.2B.1 usa la revisión publicada `1b8307e5a994bccda7471a929ad64923f70c2a33`.
+
+1. Ejecuta `npm run menu:template:v2`. El generador usa el runtime de hojas de cálculo de Codex. En otro entorno, `MIREKA_NODE_MODULES` puede señalar al directorio de módulos que contiene `@oai/artifact-tool`.
+2. Abre una copia de `tmp/catalogo-v2/menu-mireka-v2-control.xlsx`. El generador protege esa ruta contra sobrescritura y las plantillas anteriores conservan sus nombres. Para usar un libro v2 comercial anterior, agrega la fila `mostrar_precios` con valor `NO`.
+3. Ejecuta `npm run menu:preview -- ruta/al/archivo.xlsx`. Revisa el JSON en `tmp/catalogo-v2/`. El nombre incluye la huella del libro y un reporte bloqueado devuelve código de salida 1.
+
+Conserva `id` al cambiar nombres u orden. Al mover un producto, actualiza juntos `categoria` y `categoria_id`. Para proponer un alta, indica `alta:<id>` en la columna `id`. En referencias a una categoría nueva, usa su ID sin el prefijo. Una fila omitida produce una baja propuesta. El orden de partida se reconstruye a partir de la secuencia publicada.
+
+El libro sin columnas de ID solo permite diagnosticar coincidencias exactas. La vista previa no aplica cambios. Los comandos heredados usan la plantilla anterior y no aceptan los encabezados v2.
+
+### DATOS_NEGOCIO en la plantilla v2
+
+Edita `valor` y conserva la clave de la columna `campo`. Nombre, nombre corto, descripción, solicitud de WhatsApp, moneda y locale son obligatorios. Los demás campos son opcionales. Una celda opcional vacía conserva el valor de referencia. Para proponer su retiro escribe `[BORRAR]`. Las fórmulas y las claves fuera del esquema bloquean la vista previa.
+
+- Captura `telefono` y `whatsapp` como texto. El teléfono admite `+` internacional y conserva los ceros iniciales. WhatsApp usa el formato internacional de solo dígitos que espera el sitio.
+- Para Instagram, Facebook y TikTok puedes proporcionar una URL HTTPS del dominio de la plataforma. El sistema comprueba la sintaxis y deja pendientes la existencia y titularidad del perfil. Un usuario como `@perfil` queda pendiente y no genera enlace.
+- `whatsapp_activo=SI` y `mostrar_precios=SI` generan solicitudes en el reporte. Los controles de pedidos, WhatsApp y precios no se escriben desde Excel. La plantilla de control inicia ambos en `NO`.
+- La plantilla v2 anterior sigue siendo consultable. Si falta la hoja comercial, el reporte indica que solo se revisó el catálogo.
+
+El esquema y la validación están en `tools/business-preview.cjs`. El adaptador `tools/site-business-adapter.cjs` traduce la configuración local a las claves de la hoja. Para otro cliente, se puede reutilizar el validador con su esquema y sustituir el adaptador, el registro de categorías y la fuente del catálogo. Los reportes incluyen datos comerciales y se mantienen en `tmp/`.
+
+### Generación de candidatos
+
+1. Ejecuta `npm run menu:preview -- ruta/al/archivo.xlsx` y revisa el JSON que imprime el comando.
+2. Usa ese mismo libro y su reporte con `npm run menu:candidates -- ruta/al/archivo.xlsx ruta/a/vista-previa.json`.
+3. Revisa `sitio/`, `diferencias.patch` y `reporte-diferencias.json` en el directorio `tmp/candidatos-*/` indicado. El reporte incluye huellas de originales y candidatos y distingue el conjunto potencialmente publicable de los archivos privados.
+
+El comando recalcula el plan y rechaza discrepancias en el Excel, la revisión, las fuentes, el generador o los recursos referenciados. Las tres hojas deben estar presentes. Errores, altas y bajas pendientes bloquean esta etapa. La configuración candidata conserva los bloqueos comerciales. El HTML candidato sincroniza catálogo, descripción comercial, contacto, footer y SEO y actualiza las versiones de scripts que cambian. La carpeta candidata es privada y no constituye autorización de publicación.
+
+La descripción SEO editorial existente se conserva hasta que se aprueba un cambio en la descripción comercial. A partir de ese cambio se sincronizan la descripción visible y las descripciones de buscadores y redes. La demo conserva `noindex,follow` y deja los datos estructurados comerciales pendientes de confirmación. Los textos editoriales del hero se administran aparte.
+
+Para redes, registra en `contact.verifiedSocial` únicamente el perfil exacto cuya titularidad se confirmó por separado. El enlace aparece cuando la URL comercial coincide con esa entrada y pasa la validación HTTPS y de dominio. Excel puede proponer una URL, pero no puede marcarla como verificada. Un teléfono confirmado y aplicado genera un enlace `tel:` independiente del destinatario de pedidos. Para regenerar el HTML comercial tras una edición directa de configuración, usa `npm run menu:business:sync`.
+
+### Aplicación local y recuperación
+
+Revisa el parche, los candidatos y el reporte. Copia `aprobacionSha256` de `reporte-diferencias.json` solo después de aprobar ese conjunto.
+
+```powershell
+npm run menu:apply -- <Excel> <vista-previa.json> <directorio-candidato> --approve <aprobacionSha256>
+npm run menu:restore -- <respaldo-ID>
+npm run menu:restore -- <respaldo-ID> --recover
+```
+
+El comando imprime el respaldo privado, ubicado en el temporal del usuario fuera de la raíz web. Conserva ese directorio hasta cerrar la revisión. El respaldo, la bitácora y el manifiesto pueden contener datos comerciales. No deben publicarse. El respaldo debe compartir volumen con el sitio para sustituir archivos mediante renombre. Solo se permiten `index.html`, `js/menu-data.js` y `js/config.js`. Cambios pendientes de SEO impiden aplicar hasta que se coordine esa etapa.
+
+El bloqueo se libera al terminar el proceso. El estado persistente distingue una operación terminada de una interrupción. Si el proceso cae durante una aplicación o reversión, usa `--recover` con el ID indicado. La recuperación restaura el conjunto original si los archivos coinciden con las huellas previstas. Una edición posterior ajena al conjunto bloquea la recuperación y requiere revisión manual. Las sustituciones son por archivo. Mientras se escribe o se recupera el conjunto, puede haber una combinación temporal de versiones. El manifiesto solo se emite después de verificar los archivos aplicados y se anula al restaurarlos.
+
+### Diseño de autorización comercial posterior
+
+| Estado | `pricesApproved` | `whatsapp.enabled` |
+| --- | --- | --- |
+| Catálogo informativo | false | false |
+| Catálogo con precios | true | false |
+| Catálogo con pedidos | true | true, con destinatario validado |
+
+Una operación comercial futura debe registrar quién aprobó, fecha con zona horaria, revisión, estado anterior y nuevo y una huella de la lista revisada de IDs, importes, disponibilidad, moneda y destinatario internacional. Debe exigir aprobación explícita de cada permiso y verificar de nuevo la huella al aplicar. Un cambio de precios o destinatario invalida la aprobación correspondiente. La revocación debe poder volver al estado anterior de forma auditada mediante respaldo y comprobación de huellas. El estado con WhatsApp habilitado y precios pendientes sigue bloqueando pedidos. Esta fase prueba los estados en el navegador con datos interceptados.

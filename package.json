@@ -8,10 +8,16 @@
     "seo:sync": "node tools/sync-seo.cjs --write",
     "menu:generate": "node tools/import-menu.cjs",
     "menu:write": "node tools/import-menu.cjs --write",
+    "menu:template:v2": "node tools/create-catalog-template-v2.mjs",
+    "menu:preview": "node tools/catalog-preview.cjs",
+    "menu:candidates": "node tools/generate-candidates.cjs",
+    "menu:apply": "node tools/menu-transaction.cjs apply",
+    "menu:restore": "node tools/menu-transaction.cjs restore",
+    "menu:business:sync": "node tools/business-html.cjs --write",
     "menu:html": "npm run menu:html:check",
     "menu:html:sync": "node tools/generate-menu-html.cjs --write",
     "menu:html:check": "node tools/generate-menu-html.cjs --check",
-    "test": "node tools/sync-seo.cjs --check && node tools/generate-menu-html.cjs --check && node --test tests/import-menu.test.cjs tests/featured.test.cjs tests/seo.test.cjs tests/menu-html.test.cjs",
+    "test": "node tools/business-html.cjs --check && node tools/generate-menu-html.cjs --check && node --test tests/import-menu.test.cjs tests/catalog-preview.test.cjs tests/featured.test.cjs tests/seo.test.cjs tests/menu-html.test.cjs",
     "test:site": "node --test tests/product-images.test.cjs tests/navigation.test.cjs tests/visual-assets.test.cjs tests/mobile-order-bar.test.cjs tests/accessibility.test.cjs && node tests/smoke.cjs"
   },
   "devDependencies": {

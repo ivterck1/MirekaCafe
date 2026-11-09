@@ -2,18 +2,44 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const http = require('node:http');
+const path = require('node:path');
 
-const siteUrl = process.env.SITE_URL || 'http://127.0.0.1:8000';
+async function startSite() {
+  const root = path.resolve(__dirname, '..');
+  const mime = {html:'text/html', css:'text/css', js:'text/javascript', svg:'image/svg+xml',
+    webp:'image/webp', png:'image/png', ico:'image/x-icon', woff2:'font/woff2', mp4:'video/mp4'};
+  const server = http.createServer(async (request, response) => {
+    try {
+      const url = new URL(request.url, 'http://127.0.0.1');
+      const relative = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+      if (relative !== 'index.html' && !/^(assets|css|js)\/(?:[\w.-]+\/)*[\w.-]+$/.test(relative) ||
+          relative.split('/').some(segment => segment === '..' || segment === '.')) {
+        response.writeHead(404).end();
+        return;
+      }
+      const file = path.join(root, relative);
+      const bytes = await fs.promises.readFile(file);
+      response.writeHead(200, {'Content-Type':mime[path.extname(file).slice(1)] || 'application/octet-stream'});
+      response.end(bytes);
+    } catch (error) {
+      response.writeHead(error.code === 'ENOENT' ? 404 : 500).end();
+    }
+  });
+  await new Promise((resolve, reject) => server.once('error', reject).listen(0, '127.0.0.1', resolve));
+  return server;
+}
 const catalog = vm.runInNewContext(fs.readFileSync('js/menu-data.js', 'utf8') + '\nmenuItems;');
 const missingImages = new Set(catalog.map(product => product.imagen)
   .filter(image => image && !fs.existsSync(image)));
 const placeholder = fs.readFileSync('assets/images/products/placeholder.svg');
 
-async function checkSite(browser, width) {
+async function checkSite(browser, width, siteUrl) {
   const page = await browser.newPage({ viewport: { width, height: 900 } });
   page.setDefaultTimeout(10000);
   const errors = [];
   let approvePrices = false;
+  let enableWhatsApp = false;
   try {
     page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => {
@@ -21,6 +47,10 @@ async function checkSite(browser, width) {
     });
     page.on('response', response => {
       if (response.status() >= 400) errors.push(response.url());
+    });
+    page.on('requestfailed', request => {
+      const reason = request.failure()?.errorText;
+      if (reason && reason !== 'net::ERR_ABORTED') errors.push(`${reason} ${request.url()}`);
     });
 
     // Las fotos pendientes quedan fuera de esta prueba del flujo funcional.
@@ -36,7 +66,7 @@ async function checkSite(browser, width) {
       const config = fs.readFileSync('js/config.js', 'utf8');
       return route.fulfill({
         contentType: 'text/javascript',
-        body: config + '\nsiteConfig.order.pricesApproved = true; siteConfig.whatsapp.enabled = true;'
+        body: config + `\nsiteConfig.order.pricesApproved = true; siteConfig.whatsapp.enabled = ${enableWhatsApp};`
       });
     });
     await page.route('**/js/menu-data.js?*', route => {
@@ -141,6 +171,15 @@ async function checkSite(browser, width) {
     assert.match(await page.locator('#order-message').innerText(), /precios están pendientes/);
 
     approvePrices = true;
+    if (width === 390) {
+      await page.reload();
+      await openCart();
+      assert.match(await page.locator('#cart-total').innerText(), /65\.00/);
+      assert.equal(await send.isDisabled(), true);
+      await page.evaluate(() => handleWhatsAppClick());
+      assert.deepEqual(await page.evaluate(() => window.testOrderUrls), []);
+    }
+    enableWhatsApp = true;
     await page.reload();
     assert.equal(await page.locator('#header-cart-count').innerText(), '1');
     await openCart();
@@ -198,11 +237,15 @@ async function checkSite(browser, width) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
+  const server = process.env.SITE_URL ? null : await startSite();
+  const siteUrl = process.env.SITE_URL || `http://127.0.0.1:${server.address().port}`;
+  let browser;
   try {
-    for (const width of [1440, 1023, 768, 390, 375]) await checkSite(browser, width);
+    browser = await chromium.launch({ headless: true, channel: 'chrome' });
+    for (const width of [1440, 1023, 768, 390, 375]) await checkSite(browser, width, siteUrl);
   } finally {
-    await browser.close();
+    try { await browser?.close(); }
+    finally { if (server) await new Promise(resolve => server.close(resolve)); }
   }
 })().catch(error => {
   console.error(error);

@@ -1003,7 +1003,7 @@ function applySiteConfig() {
   });
   // Los metadatos se generan antes del despliegue con npm run seo:sync.
   // Conservar el HTML inicial evita depender de JS o deshacer los textos SEO.
-  document.querySelectorAll('.brand img, .footer-content img').forEach((image) => {
+  document.querySelectorAll('.brand img').forEach((image) => {
     image.src = siteConfig.images.logo;
     image.alt = siteConfig.business.name;
   });
@@ -1018,23 +1018,6 @@ function applySiteConfig() {
     photo.addEventListener('load', () => heroMedia.append(photo), { once: true });
     photo.src = siteConfig.images.hero;
   }
-  const contact = document.querySelector('#business-contact');
-  ['hours', 'address', 'coverage'].forEach((key) => {
-    if (!siteConfig.contact[key]) return;
-    const line = document.createElement('p');
-    line.textContent = siteConfig.contact[key];
-    contact.append(line);
-  });
-  ['instagram', 'facebook'].forEach((key) => {
-    try {
-      const url = new URL(siteConfig.contact[key]);
-      if (url.protocol !== 'https:') return;
-      const link = document.createElement('a');
-      link.href = url.href;
-      link.textContent = key === 'instagram' ? 'Instagram' : 'Facebook';
-      contact.append(link);
-    } catch { /* Los enlaces vacíos u inválidos no se muestran. */ }
-  });
 }
 
 function initializeMenu() {

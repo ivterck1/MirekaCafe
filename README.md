@@ -60,7 +60,7 @@ El importador respeta el orden de categorías y productos y convierte SI/NO a bo
 
 Las imágenes se nombran, por ejemplo, `croissant.webp`, y se colocan en `assets/images/products/`. No entregar rutas en Excel. Resolver imágenes pendientes antes de publicar para evitar 404; los placeholders genéricos existentes siguen disponibles. No reutilizar contenido de otros clientes.
 
-`npm test` cubre el importador con archivos y catálogos temporales, incluido --write sin tocar el original. `npm run test:site` necesita Playwright y Chrome en el entorno de desarrollo, además del servidor estático del apartado anterior; también admite PLAYWRIGHT_MODULE con la ruta del módulo y SITE_URL para apuntar a un servidor alternativo de esta plantilla. Intercepta WhatsApp y no envía pedidos.
+`npm test` cubre el importador con archivos y catálogos temporales, incluido --write sin tocar el original. `npm run test:site` necesita Playwright y Chrome. El smoke inicia y cierra su servidor local en un puerto libre. Admite PLAYWRIGHT_MODULE con la ruta del módulo y SITE_URL para usar un servidor alternativo. Intercepta WhatsApp y no envía pedidos.
 
 Resultados de esta entrega: [verificación del menú Excel](docs/VERIFICACION_MENU_EXCEL.md). `tools/create-menu-template.mjs` es una herramienta opcional de autoría para el entorno Codex con @oai/artifact-tool; no se necesita para llenar el Excel ni ejecutar el importador.
 

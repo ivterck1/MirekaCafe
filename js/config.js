@@ -23,8 +23,12 @@ const siteConfig = {
     hours: "Lunes a sábado, 9:00 a 21:00",
     address: "Retorno 5 de Manuel Rivera Cambas 32 (al lado de las canchas), Ciudad de México",
     coverage: "Cobertura de entrega pendiente de confirmación.",
+    phone: "",
     instagram: "",
-    facebook: ""
+    facebook: "",
+    tiktok: "",
+    // Solo URLs exactas cuya titularidad ya se confirmó fuera del Excel.
+    verifiedSocial: {}
   },
   order: {
     currency: "MXN",
