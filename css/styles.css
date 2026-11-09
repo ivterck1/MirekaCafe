@@ -694,7 +694,35 @@ textarea:focus-visible {
   background: var(--color-background-strong);
 }
 
-.menu-grid {
+.category-picker[hidden],
+.category-list[hidden],
+.whatsapp-button[hidden],
+.menu-grid [hidden] {
+  display: none;
+}
+
+.menu-category-index ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding-inline-start: 1.2rem;
+}
+
+.menu-category-index a {
+  text-decoration: underline;
+}
+
+.menu-grid[data-interactive] .menu-category > h3 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.menu-grid,
+.menu-category-cards {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
@@ -702,7 +730,7 @@ textarea:focus-visible {
 
 @media (min-width: 768px) {
   @container (min-width: 42rem) {
-    .menu-grid {
+    .menu-category-cards {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -750,13 +778,13 @@ textarea:focus-visible {
   padding: 1rem;
 }
 
-.dish-content h3,
+.dish-content h4,
 .dish-content p,
 .price {
   margin: 0;
 }
 
-.dish-content h3 {
+.dish-content h4 {
   color: var(--color-secondary);
   font-size: 1.1rem;
   font-weight: 700;

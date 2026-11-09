@@ -21,10 +21,10 @@
     <link rel="icon" href="assets/images/brand/favicon-96.png?v=1.0.21" type="image/png" sizes="96x96">
     <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=1.0.21" sizes="180x180">
     <link rel="stylesheet" href="css/theme.css?v=1.0.20">
-    <link rel="stylesheet" href="css/styles.css?v=1.0.20">
+    <link rel="stylesheet" href="css/styles.css?v=1.0.22">
     <script src="js/config.js?v=1.0.21" defer></script>
     <script src="js/menu-data.js?v=1.0.2" defer></script>
-    <script src="js/app.js?v=1.0.21" defer></script>
+    <script src="js/app.js?v=1.0.22" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -123,14 +123,937 @@
             </div>
 
             <p id="catalog-price-status" hidden></p>
-            <div class="category-picker">
+            <div class="category-picker" hidden>
               <label for="category-select">Ir a una categoría</label>
               <select id="category-select" aria-controls="menu-grid"></select>
             </div>
-            <div class="category-list" role="group" aria-label="Categorías del menú"></div>
+            <div class="category-list" role="group" aria-label="Categorías del menú" hidden></div>
             <p class="category-status" id="category-status" role="status" aria-atomic="true"></p>
 
-            <div class="menu-grid" id="menu-grid" role="group" aria-label="Platillos disponibles"></div>
+            <div class="menu-grid" id="menu-grid" role="group" aria-label="Platillos disponibles">
+              <!-- MENU:START (generado por npm run menu:html:sync) -->
+              <nav class="menu-category-index" aria-label="Índice de categorías">
+                <ul>
+                  <li><a href="#menu-categoria-cafe-caliente">Café caliente</a></li>
+                  <li><a href="#menu-categoria-capuchinos-saborizados">Capuchinos Saborizados</a></li>
+                  <li><a href="#menu-categoria-lattes-frios">Lattes fríos</a></li>
+                  <li><a href="#menu-categoria-sodas-italianas">Sodas italianas</a></li>
+                  <li><a href="#menu-categoria-frappes">Frappés</a></li>
+                  <li><a href="#menu-categoria-tes-e-infusiones">Tés e infusiones</a></li>
+                  <li><a href="#menu-categoria-smoothies">Smoothies</a></li>
+                  <li><a href="#menu-categoria-bebidas-preparadas">Bebidas preparadas</a></li>
+                  <li><a href="#menu-categoria-chapatas-sandwiches-y-desayunos">Chapatas, Sándwiches y desayunos</a></li>
+                  <li><a href="#menu-categoria-crepas-saladas-y-dulces">Crepas saladas y dulces</a></li>
+                  <li><a href="#menu-categoria-personaliza-tu-crepa">Personaliza tu crepa</a></li>
+                  <li><a href="#menu-categoria-waffles-dulces">Waffles dulces</a></li>
+                  <li><a href="#menu-categoria-conos-mireka">Conos Mireka</a></li>
+                  <li><a href="#menu-categoria-salsas">Salsas</a></li>
+                  <li><a href="#menu-categoria-combos">Combos</a></li>
+                  <li><a href="#menu-categoria-snacks-otros">Snacks &amp; Otros</a></li>
+                  <li><a href="#menu-categoria-postres">Postres</a></li>
+                  <li><a href="#menu-categoria-especiales">Especiales</a></li>
+                </ul>
+              </nav>
+              <section id="menu-categoria-cafe-caliente" class="menu-category" data-menu-category="Café caliente" aria-labelledby="menu-categoria-cafe-caliente-titulo">
+                <h3 id="menu-categoria-cafe-caliente-titulo">Café caliente</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="cafe-caliente-americano">
+                    <div class="dish-image"><img src="assets/images/products/cafe-caliente-americano.webp" alt="Americano" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Americano</h4>
+                      <p>Café americano tradicional</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="cafe-caliente-espresso">
+                    <div class="dish-image"><img src="assets/images/products/cafe-caliente-espresso.webp" alt="Espresso" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Espresso</h4>
+                      <p>Café espresso concentrado</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="cafe-caliente-chocolate-caliente">
+                    <div class="dish-image"><img src="assets/images/products/cafe-caliente-chocolate-caliente.webp" alt="Chocolate caliente" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chocolate caliente</h4>
+                      <p>Chocolate caliente tradicional</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="cafe-caliente-capuchino-tradicional">
+                    <div class="dish-image"><img src="assets/images/products/cafe-caliente-capuchino-tradicional.webp" alt="Capuchino tradicional" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Capuchino tradicional</h4>
+                      <p>Capuchino clásico</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-capuchinos-saborizados" class="menu-category" data-menu-category="Capuchinos Saborizados" aria-labelledby="menu-categoria-capuchinos-saborizados-titulo">
+                <h3 id="menu-categoria-capuchinos-saborizados-titulo">Capuchinos Saborizados</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-crema-irlandesa-10-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-crema-irlandesa.webp" alt="Crema Irlandesa 10 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crema Irlandesa 10 oz</h4>
+                      <p>Capuchino sabor crema irlandesa</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-crema-irlandesa-16-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-crema-irlandesa.webp" alt="Crema Irlandesa 16 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crema Irlandesa 16 oz</h4>
+                      <p>Capuchino sabor crema irlandesa</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-caramelo-10-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-caramelo.webp" alt="Caramelo 10 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Caramelo 10 oz</h4>
+                      <p>Capuchino sabor caramelo</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-caramelo-16-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-caramelo.webp" alt="Caramelo 16 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Caramelo 16 oz</h4>
+                      <p>Capuchino sabor caramelo</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-chocolate-10-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-chocolate.webp" alt="Chocolate 10 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chocolate 10 oz</h4>
+                      <p>Capuchino sabor chocolate</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-chocolate-16-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-chocolate.webp" alt="Chocolate 16 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chocolate 16 oz</h4>
+                      <p>Capuchino sabor chocolate</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-avellana-10-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-avellana.webp" alt="Avellana 10 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Avellana 10 oz</h4>
+                      <p>Capuchino sabor avellana</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-avellana-16-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-avellana.webp" alt="Avellana 16 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Avellana 16 oz</h4>
+                      <p>Capuchino sabor avellana</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-amaretto-10-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-amaretto.webp" alt="Amaretto 10 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Amaretto 10 oz</h4>
+                      <p>Capuchino sabor amaretto</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-amaretto-16-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-amaretto.webp" alt="Amaretto 16 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Amaretto 16 oz</h4>
+                      <p>Capuchino sabor amaretto</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-vainilla-10-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-vainilla.webp" alt="Vainilla 10 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Vainilla 10 oz</h4>
+                      <p>Capuchino sabor vainilla</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-vainilla-16-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-vainilla.webp" alt="Vainilla 16 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Vainilla 16 oz</h4>
+                      <p>Capuchino sabor vainilla</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-cajeta-10-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-cajeta.webp" alt="Cajeta 10 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cajeta 10 oz</h4>
+                      <p>Capuchino sabor cajeta</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="capuchinos-saborizados-cajeta-16-oz">
+                    <div class="dish-image"><img src="assets/images/products/capuchinos-saborizados-cajeta.webp" alt="Cajeta 16 oz" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cajeta 16 oz</h4>
+                      <p>Capuchino sabor cajeta</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-lattes-frios" class="menu-category" data-menu-category="Lattes fríos" aria-labelledby="menu-categoria-lattes-frios-titulo">
+                <h3 id="menu-categoria-lattes-frios-titulo">Lattes fríos</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="lattes-frios-tradicional">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-tradicional.webp" alt="Tradicional" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Tradicional</h4>
+                      <p>Latte frío en presentación de 16oz</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-crema-irlandesa">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-crema-irlandesa.webp" alt="Crema irlandesa" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crema irlandesa</h4>
+                      <p>Latte frío sabor crema irlandesa (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-caramelo">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-caramelo.webp" alt="Caramelo" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Caramelo</h4>
+                      <p>Latte frío sabor caramelo (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-chocolate">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-chocolate.webp" alt="Chocolate" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chocolate</h4>
+                      <p>Latte frío sabor chocolate (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-avellana">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-avellana.webp" alt="Avellana" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Avellana</h4>
+                      <p>Latte frío sabor avellana (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-amaretto">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-amaretto.webp" alt="Amaretto" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Amaretto</h4>
+                      <p>Latte frío sabor amaretto (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-vainilla">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-vainilla.webp" alt="Vainilla" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Vainilla</h4>
+                      <p>Latte frío sabor vainilla (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-cajeta">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-cajeta.webp" alt="Cajeta" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cajeta</h4>
+                      <p>Latte frío sabor cajeta (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="lattes-frios-lechera">
+                    <div class="dish-image"><img src="assets/images/products/lattes-frios-lechera.webp" alt="Lechera" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Lechera</h4>
+                      <p>Latte frío sabor lechera (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-sodas-italianas" class="menu-category" data-menu-category="Sodas italianas" aria-labelledby="menu-categoria-sodas-italianas-titulo">
+                <h3 id="menu-categoria-sodas-italianas-titulo">Sodas italianas</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="sodas-italianas-mora">
+                    <div class="dish-image"><img src="assets/images/products/sodas-italianas-mora.webp" alt="Mora" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Mora</h4>
+                      <p>Soda italiana sabor mora</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="sodas-italianas-frutos-rojos">
+                    <div class="dish-image"><img src="assets/images/products/sodas-italianas-frutos-rojos.webp" alt="Frutos rojos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Frutos rojos</h4>
+                      <p>Soda italiana sabor frutos rojos</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="sodas-italianas-frambuesa">
+                    <div class="dish-image"><img src="assets/images/products/sodas-italianas-frambuesa.webp" alt="Frambuesa" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Frambuesa</h4>
+                      <p>Soda italiana sabor frambuesa</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-frappes" class="menu-category" data-menu-category="Frappés" aria-labelledby="menu-categoria-frappes-titulo">
+                <h3 id="menu-categoria-frappes-titulo">Frappés</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="frappes-cafe">
+                    <div class="dish-image"><img src="assets/images/products/frappes-cafe.webp" alt="Café" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Café</h4>
+                      <p>Frappé sabor café</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-fresa">
+                    <div class="dish-image"><img src="assets/images/products/frappes-fresa.webp" alt="Fresa" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Fresa</h4>
+                      <p>Frappé sabor fresa</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-chocolate">
+                    <div class="dish-image"><img src="assets/images/products/frappes-chocolate.webp" alt="Chocolate" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chocolate</h4>
+                      <p>Frappé sabor chocolate</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-nutella">
+                    <div class="dish-image"><img src="assets/images/products/frappes-nutella.webp" alt="Nutella" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Nutella</h4>
+                      <p>Frappé sabor Nutella</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-oreo">
+                    <div class="dish-image"><img src="assets/images/products/frappes-oreo.webp" alt="Oreo" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Oreo</h4>
+                      <p>Frappé sabor Oreo</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-crema-irlandesa">
+                    <div class="dish-image"><img src="assets/images/products/frappes-crema-irlandesa.webp" alt="Crema irlandesa" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crema irlandesa</h4>
+                      <p>Frappé sabor crema irlandesa</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-caramelo">
+                    <div class="dish-image"><img src="assets/images/products/frappes-caramelo.webp" alt="Caramelo" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Caramelo</h4>
+                      <p>Frappé sabor caramelo</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-avellana">
+                    <div class="dish-image"><img src="assets/images/products/frappes-avellana.webp" alt="Avellana" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Avellana</h4>
+                      <p>Frappé sabor avellana</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-amaretto">
+                    <div class="dish-image"><img src="assets/images/products/frappes-amaretto.webp" alt="Amaretto" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Amaretto</h4>
+                      <p>Frappé sabor amaretto</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-vainilla">
+                    <div class="dish-image"><img src="assets/images/products/frappes-vainilla.webp" alt="Vainilla" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Vainilla</h4>
+                      <p>Frappé sabor vainilla</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-frutos-rojos">
+                    <div class="dish-image"><img src="assets/images/products/frappes-frutos-rojos.webp" alt="Frutos rojos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Frutos rojos</h4>
+                      <p>Frappé sabor frutos rojos</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-matcha">
+                    <div class="dish-image"><img src="assets/images/products/frappes-matcha.webp" alt="Matcha" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Matcha</h4>
+                      <p>Frappé sabor matcha</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="frappes-taro">
+                    <div class="dish-image"><img src="assets/images/products/frappes-taro.webp" alt="Taro" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Taro</h4>
+                      <p>Frappé sabor taro</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-tes-e-infusiones" class="menu-category" data-menu-category="Tés e infusiones" aria-labelledby="menu-categoria-tes-e-infusiones-titulo">
+                <h3 id="menu-categoria-tes-e-infusiones-titulo">Tés e infusiones</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="tes-e-infusiones-frutos-rojos">
+                    <div class="dish-image"><img src="assets/images/products/tes-e-infusiones-frutos-rojos.webp" alt="Frutos rojos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Frutos rojos</h4>
+                      <p>Té / infusión sabor frutos rojos (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="tes-e-infusiones-canela">
+                    <div class="dish-image"><img src="assets/images/products/tes-e-infusiones-canela.webp" alt="Canela" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Canela</h4>
+                      <p>Té / infusión sabor canela (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="tes-e-infusiones-manzanilla">
+                    <div class="dish-image"><img src="assets/images/products/tes-e-infusiones-manzanilla.webp" alt="Manzanilla" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Manzanilla</h4>
+                      <p>Té / infusión de manzanilla (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="tes-e-infusiones-hierbabuena">
+                    <div class="dish-image"><img src="assets/images/products/tes-e-infusiones-hierbabuena.webp" alt="Hierbabuena" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Hierbabuena</h4>
+                      <p>Té / infusión de hierbabuena (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-smoothies" class="menu-category" data-menu-category="Smoothies" aria-labelledby="menu-categoria-smoothies-titulo">
+                <h3 id="menu-categoria-smoothies-titulo">Smoothies</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="smoothies-frutos-rojos">
+                    <div class="dish-image"><img src="assets/images/products/smoothies-frutos-rojos.webp" alt="Frutos rojos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Frutos rojos</h4>
+                      <p>Smoothie sabor frutos rojos (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="smoothies-fresa">
+                    <div class="dish-image"><img src="assets/images/products/smoothies-fresa.webp" alt="Fresa" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Fresa</h4>
+                      <p>Smoothie sabor fresa (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="smoothies-fresa-con-platano">
+                    <div class="dish-image"><img src="assets/images/products/smoothies-fresa-con-platano.webp" alt="Fresa con plátano" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Fresa con plátano</h4>
+                      <p>Smoothie sabor fresa con plátano (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-bebidas-preparadas" class="menu-category" data-menu-category="Bebidas preparadas" aria-labelledby="menu-categoria-bebidas-preparadas-titulo">
+                <h3 id="menu-categoria-bebidas-preparadas-titulo">Bebidas preparadas</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="bebidas-preparadas-chamoyadas">
+                    <div class="dish-image"><img src="assets/images/products/bebidas-preparadas-chamoyadas.webp" alt="Chamoyadas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chamoyadas</h4>
+                      <p>Chamoyada preparada (16oz)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="bebidas-preparadas-azulitos">
+                    <div class="dish-image"><img src="assets/images/products/bebidas-preparadas-azulitos.webp" alt="Azulitos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Azulitos</h4>
+                      <p>Azulito preparado (1 litro)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="bebidas-preparadas-micheladas">
+                    <div class="dish-image"><img src="assets/images/products/bebidas-preparadas-micheladas.webp" alt="Micheladas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Micheladas</h4>
+                      <p>Michelada preparada (1 litro)</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-chapatas-sandwiches-y-desayunos" class="menu-category" data-menu-category="Chapatas, Sándwiches y desayunos" aria-labelledby="menu-categoria-chapatas-sandwiches-y-desayunos-titulo">
+                <h3 id="menu-categoria-chapatas-sandwiches-y-desayunos-titulo">Chapatas, Sándwiches y desayunos</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="chapatas-sandwiches-y-desayunos-chapata">
+                    <div class="dish-image"><img src="assets/images/products/chapatas-sandwiches-y-desayunos-chapata.webp" alt="Chapata" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chapata</h4>
+                      <p>De jamón y 3 quesos.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="chapatas-sandwiches-y-desayunos-cuernito">
+                    <div class="dish-image"><img src="assets/images/products/chapatas-sandwiches-y-desayunos-cuernito.webp" alt="Cuernito" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cuernito</h4>
+                      <p>De jamón, quesos y aderezo.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="chapatas-sandwiches-y-desayunos-mini-molletes">
+                    <div class="dish-image"><img src="assets/images/products/chapatas-sandwiches-y-desayunos-mini-molletes.webp" alt="Mini molletes" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Mini molletes</h4>
+                      <p>Pan doradito con frijoles, queso gratinado y pico de gallo.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="chapatas-sandwiches-y-desayunos-mini-molletes-mireka">
+                    <div class="dish-image"><img src="assets/images/products/chapatas-sandwiches-y-desayunos-mini-molletes-mireka.webp" alt="Mini molletes Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Mini molletes Mireka</h4>
+                      <p>Acompañados de frijoles, jamón, longaniza, queso gratinado y pico de gallo.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="chapatas-sandwiches-y-desayunos-sincronizadas">
+                    <div class="dish-image"><img src="assets/images/products/chapatas-sandwiches-y-desayunos-sincronizadas.webp" alt="Sincronizadas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Sincronizadas</h4>
+                      <p>Tortillas de harina doraditas, rellenas de jamón y queso fundido.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="chapatas-sandwiches-y-desayunos-chilaquiles-suizos-mireka">
+                    <div class="dish-image"><img src="assets/images/products/chapatas-sandwiches-y-desayunos-chilaquiles-suizos-mireka.webp" alt="Chilaquiles Suizos Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Chilaquiles Suizos Mireka</h4>
+                      <p>Totopos bañados en salsa verde cremosa, con queso gratinado, pollo y crema.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-crepas-saladas-y-dulces" class="menu-category" data-menu-category="Crepas saladas y dulces" aria-labelledby="menu-categoria-crepas-saladas-y-dulces-titulo">
+                <h3 id="menu-categoria-crepas-saladas-y-dulces-titulo">Crepas saladas y dulces</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-jamon-y-tres-quesos">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-jamon-y-tres-quesos.webp" alt="Crepa jamón y tres quesos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa jamón y tres quesos</h4>
+                      <p>Deliciosa crepa rellena de jamón y una combinación de tres quesos fundidos.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-especial-mireka">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-especial-mireka.webp" alt="Crepa especial Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa especial Mireka</h4>
+                      <p>Nuestra combinación especial de tres quesos, pepperoni, jamón y aderezo de la casa.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-dulce-nutella">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-dulce-nutella.webp" alt="Crepa dulce - Nutella" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa dulce - Nutella</h4>
+                      <p>Crepa dulce rellena de Nutella.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-dulce-cajeta">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-dulce-cajeta.webp" alt="Crepa dulce - Cajeta" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa dulce - Cajeta</h4>
+                      <p>Crepa dulce rellena de Cajeta.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-dulce-chocolate">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-dulce-chocolate.webp" alt="Crepa dulce - Chocolate" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa dulce - Chocolate</h4>
+                      <p>Crepa dulce rellena de Chocolate.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-dulce-zarzamora">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-dulce-zarzamora.webp" alt="Crepa dulce - Zarzamora" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa dulce - Zarzamora</h4>
+                      <p>Crepa dulce rellena de Zarzamora.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-dulce-fresa">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-dulce-fresa.webp" alt="Crepa dulce - Fresa" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa dulce - Fresa</h4>
+                      <p>Crepa dulce rellena de Fresa.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-dulce-caramelo">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-dulce-caramelo.webp" alt="Crepa dulce - Caramelo" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa dulce - Caramelo</h4>
+                      <p>Crepa dulce rellena de Caramelo.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="crepas-saladas-y-dulces-crepa-dulce-lechera">
+                    <div class="dish-image"><img src="assets/images/products/crepas-saladas-y-dulces-crepa-dulce-lechera.webp" alt="Crepa dulce - Lechera" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Crepa dulce - Lechera</h4>
+                      <p>Crepa dulce rellena de Lechera.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-personaliza-tu-crepa" class="menu-category" data-menu-category="Personaliza tu crepa" aria-labelledby="menu-categoria-personaliza-tu-crepa-titulo">
+                <h3 id="menu-categoria-personaliza-tu-crepa-titulo">Personaliza tu crepa</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="personaliza-tu-crepa-rellenos-adicionales">
+                    <div class="dish-image"><img src="assets/images/products/personaliza-tu-crepa-rellenos-adicionales.webp" alt="Rellenos adicionales" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Rellenos adicionales</h4>
+                      <p>Fruta y queso philadelphia.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="personaliza-tu-crepa-toppings">
+                    <div class="dish-image"><img src="assets/images/products/personaliza-tu-crepa-toppings.webp" alt="Toppings" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Toppings</h4>
+                      <p>Nuez, pasas, chispas de chocolate, granillo de colores, galleta oreo, chocoretas, bombones y fruta fresca de temporada.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-waffles-dulces" class="menu-category" data-menu-category="Waffles dulces" aria-labelledby="menu-categoria-waffles-dulces-titulo">
+                <h3 id="menu-categoria-waffles-dulces-titulo">Waffles dulces</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="waffles-dulces-waffle-dulce">
+                    <div class="dish-image"><img src="assets/images/products/waffles-dulces-waffle-dulce.webp" alt="Waffle dulce" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Waffle dulce</h4>
+                      <p>Salsas/Sabores: Nutella, cajeta, chocolate, zarzamora, fresa, caramelo y lechera. Rellenos: Fruta o queso Philadelphia. Toppings: Nuez, pasas, chispas de chocolate, granillo de colores, chocoretas y bombones.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-conos-mireka" class="menu-category" data-menu-category="Conos Mireka" aria-labelledby="menu-categoria-conos-mireka-titulo">
+                <h3 id="menu-categoria-conos-mireka-titulo">Conos Mireka</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="conos-mireka-cono-salchipapero">
+                    <div class="dish-image"><img src="assets/images/products/conos-mireka-cono-salchipapero.webp" alt="Cono Salchipapero" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cono Salchipapero</h4>
+                      <p>Papas a la francesa con salchichas y salsas al gusto.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="conos-mireka-cono-boneless">
+                    <div class="dish-image"><img src="assets/images/products/conos-mireka-cono-boneless.webp" alt="Cono Boneless" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cono Boneless</h4>
+                      <p>Papas crujientes con boneless, acompañados de tu salsa favorita.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="conos-mireka-cono-quesero">
+                    <div class="dish-image"><img src="assets/images/products/conos-mireka-cono-quesero.webp" alt="Cono Quesero" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cono Quesero</h4>
+                      <p>Papas a la francesa con dedos de queso y aderezos.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="conos-mireka-cono-mireka">
+                    <div class="dish-image"><img src="assets/images/products/conos-mireka-cono-mireka.webp" alt="Cono Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Cono Mireka</h4>
+                      <p>Papas crujientes con boneless, dedos de queso y aderezos (Salsas a elegir).</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-salsas" class="menu-category" data-menu-category="Salsas" aria-labelledby="menu-categoria-salsas-titulo">
+                <h3 id="menu-categoria-salsas-titulo">Salsas</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="salsas-salsas-clasicas">
+                    <div class="dish-image"><img src="assets/images/products/salsas-salsas-clasicas.webp" alt="Salsas clásicas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Salsas clásicas</h4>
+                      <p>Catsup, Mayonesa con chipotle, Salsas negras.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="salsas-salsas-cremosas">
+                    <div class="dish-image"><img src="assets/images/products/salsas-salsas-cremosas.webp" alt="Salsas cremosas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Salsas cremosas</h4>
+                      <p>Queso amarillo caliente, BBQ, Crema de chipotle picante.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="salsas-salsas-especiales">
+                    <div class="dish-image"><img src="assets/images/products/salsas-salsas-especiales.webp" alt="Salsas especiales" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Salsas especiales</h4>
+                      <p>Mango habanero dulce y picoso, Búfalo, Salsa macha picosita.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-combos" class="menu-category" data-menu-category="Combos" aria-labelledby="menu-categoria-combos-titulo">
+                <h3 id="menu-categoria-combos-titulo">Combos</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="combos-antojo-mireka">
+                    <div class="dish-image"><img src="assets/images/products/combos-antojo-mireka.webp" alt="Antojo Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Antojo Mireka</h4>
+                      <p>1 bebida + 1 antojo dulce. Latte frío o frappé + Crepa, waffle o mini hot cakes. Para quien quiere consentirse por la tarde.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="combos-plan-de-dos">
+                    <div class="dish-image"><img src="assets/images/products/combos-plan-de-dos.webp" alt="Plan de Dos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Plan de Dos</h4>
+                      <p>2 bebidas + 1 postre para compartir. Dos lattes, Capuchinos o Frappes + Un waffle para compartir. Perfecto para parejas, hermanas o amigas.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="combos-antojo-salado">
+                    <div class="dish-image"><img src="assets/images/products/combos-antojo-salado.webp" alt="Antojo Salado" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Antojo Salado</h4>
+                      <p>1 snack + 1 bebida. Papas, salchichas o boneless + 1 Soda italiana o bebida fría. Para quienes buscan algo salado y llenador.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="combos-delicia-mireka">
+                    <div class="dish-image"><img src="assets/images/products/combos-delicia-mireka.webp" alt="Delicia Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Delicia Mireka</h4>
+                      <p>1 chapata, cuernito o club sándwich + 1 bebida (Café americano, té o soda italiana). Ideal para una comida rápida o una pausa en el día.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="combos-desayuno-mireka">
+                    <div class="dish-image"><img src="assets/images/products/combos-desayuno-mireka.webp" alt="Desayuno Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Desayuno Mireka</h4>
+                      <p>1 desayuno + 1 bebida + fruta. Fruta, Chilaquiles suizos con o sin pollo + Café americano o chocolate caliente. Ideal para un rico desayuno completo.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="combos-duo-de-antojos">
+                    <div class="dish-image"><img src="assets/images/products/combos-duo-de-antojos.webp" alt="Duo de antojos" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Duo de antojos</h4>
+                      <p>2 bebidas + 2 alimentos. Dos frappés o lattes + Dos crepas o mini hot cake para dos personas. Ideal para antojos dulces.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="combos-mix-snacks">
+                    <div class="dish-image"><img src="assets/images/products/combos-mix-snacks.webp" alt="Mix snacks" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Mix snacks</h4>
+                      <p>Papas a la francesa + boneless + dedos de queso + 2 chamoyadas. Un combo ideal para compartir con tu persona favorita o familia.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-snacks-otros" class="menu-category" data-menu-category="Snacks &amp; Otros" aria-labelledby="menu-categoria-snacks-otros-titulo">
+                <h3 id="menu-categoria-snacks-otros-titulo">Snacks &amp; Otros</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="snacks-otros-mini-hot-cake-mireka">
+                    <div class="dish-image"><img src="assets/images/products/snacks-otros-mini-hot-cake-mireka.webp" alt="Mini hot cake Mireka" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Mini hot cake Mireka</h4>
+                      <p>Una opción dulce y personalizable para disfrutar en cualquier momento, con las mismas combinaciones de sabores, frutas y toppings.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="snacks-otros-boneless">
+                    <div class="dish-image"><img src="assets/images/products/snacks-otros-boneless.webp" alt="Boneless" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Boneless</h4>
+                      <p>Trozos de pollo crujientes, acompañados de tu salsa favorita.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="snacks-otros-papas-a-la-francesa">
+                    <div class="dish-image"><img src="assets/images/products/snacks-otros-papas-a-la-francesa.webp" alt="Papas a la francesa" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Papas a la francesa</h4>
+                      <p>Papas doraditas y crujientes, ideales para acompañar cualquier antojo.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="snacks-otros-salchipapas">
+                    <div class="dish-image"><img src="assets/images/products/snacks-otros-salchipapas.webp" alt="Salchipapas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Salchipapas</h4>
+                      <p>La combinación de papas a la francesa y salchichas con salsas al gusto.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="snacks-otros-dedos-de-queso">
+                    <div class="dish-image"><img src="assets/images/products/snacks-otros-dedos-de-queso.webp" alt="Dedos de queso" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Dedos de queso</h4>
+                      <p>Queso empanizado y crujiente, perfecto para acompañar con tus aderezos favoritos.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="snacks-otros-gomitas-enchiladas">
+                    <div class="dish-image"><img src="assets/images/products/snacks-otros-gomitas-enchiladas.webp" alt="Gomitas enchiladas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Gomitas enchiladas</h4>
+                      <p>Un antojo dulce, acidito y picosito para complementar tus bebidas.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-postres" class="menu-category" data-menu-category="Postres" aria-labelledby="menu-categoria-postres-titulo">
+                <h3 id="menu-categoria-postres-titulo">Postres</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="postres-fruta-con-crema">
+                    <div class="dish-image"><img src="assets/images/products/postres-fruta-con-crema.webp" alt="Fruta con crema" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Fruta con crema</h4>
+                      <p>Fruta fresca servida con crema especial.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-fresas-con-crema">
+                    <div class="dish-image"><img src="assets/images/products/postres-fresas-con-crema.webp" alt="Fresas con crema" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Fresas con crema</h4>
+                      <p>Fresas frescas servidas con crema especial.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-duraznos-con-crema">
+                    <div class="dish-image"><img src="assets/images/products/postres-duraznos-con-crema.webp" alt="Duraznos con crema" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Duraznos con crema</h4>
+                      <p>Duraznos en almíbar servidos con crema especial.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-pay-de-limon">
+                    <div class="dish-image"><img src="assets/images/products/postres-pay-de-limon.webp" alt="Pay de limón" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Pay de limón</h4>
+                      <p>Rebanada de pay de limón.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-pay-de-queso">
+                    <div class="dish-image"><img src="assets/images/products/postres-pay-de-queso.webp" alt="Pay de queso" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Pay de queso</h4>
+                      <p>Rebanada de pay de queso.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-arroz-con-leche">
+                    <div class="dish-image"><img src="assets/images/products/postres-arroz-con-leche.webp" alt="Arroz con leche" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Arroz con leche</h4>
+                      <p>Arroz con leche tradicional.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-pan-dulce">
+                    <div class="dish-image"><img src="assets/images/products/postres-pan-dulce.webp" alt="Pan dulce" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Pan dulce</h4>
+                      <p>Selección de pan dulce de la casa.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-conchas-rellenas">
+                    <div class="dish-image"><img src="assets/images/products/postres-conchas-rellenas.webp" alt="Conchas rellenas" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Conchas rellenas</h4>
+                      <p>Conchas rellenas de crema batida y fruta.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                  <article class="menu-card" data-menu-product-id="postres-donas-de-chocolate-y-azucar">
+                    <div class="dish-image"><img src="assets/images/products/postres-donas-de-chocolate-y-azucar.webp" alt="Donas de chocolate y azúcar" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Donas de chocolate y azúcar</h4>
+                      <p>Donas preparadas con cobertura de chocolate o azúcar.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section id="menu-categoria-especiales" class="menu-category" data-menu-category="Especiales" aria-labelledby="menu-categoria-especiales-titulo">
+                <h3 id="menu-categoria-especiales-titulo">Especiales</h3>
+                <div class="menu-category-cards">
+                  <article class="menu-card" data-menu-product-id="especiales-pozole-mireka-especial-de-la-semana">
+                    <div class="dish-image"><img src="assets/images/products/especiales-pozole-mireka-especial-de-la-semana.webp" alt="Pozole Mireka (Especial de la semana)" loading="lazy" width="640" height="480"></div>
+                    <div class="dish-content">
+                      <h4>Pozole Mireka (Especial de la semana)</h4>
+                      <p>Disponible viernes y sábado. Pozole rojo de pollo o cerdo con sabor casero de la receta de la casa.</p>
+                      <div class="dish-footer"><p class="price">Precio pendiente</p></div>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <!-- MENU:END -->
+            </div>
           </div>
 
           <aside class="cart-panel" id="carrito" aria-labelledby="cart-title" tabindex="-1">
@@ -200,7 +1123,7 @@
               </form>
             </section>
 
-            <button class="whatsapp-button" type="button" disabled>
+            <button class="whatsapp-button" type="button" disabled hidden>
               Enviar por WhatsApp
             </button>
             <p class="order-message" id="order-message" aria-live="polite"></p>
@@ -224,7 +1147,7 @@
           </div>
         </div>
       </section>
-    <noscript>Activa JavaScript para consultar el menú y preparar tu pedido.</noscript>
+    <noscript>Puedes consultar el menú completo. Para usar el carrito, activa JavaScript.</noscript>
     </main>
 
     <footer class="site-footer">

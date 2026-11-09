@@ -67,7 +67,7 @@ async function checkSite(browser, width) {
       const selected = categories.filter({ hasText: name });
       assert.equal(await selected.getAttribute('aria-pressed'), 'true');
       assert.equal(await page.locator('[data-category][aria-pressed="true"]').count(), 1);
-      const count = await page.locator('.menu-card').count();
+      const count = await page.locator('.menu-card:visible').count();
       assert.ok(count > 0);
       assert.equal(await categoryStatus.innerText(), `${name} · ${count} ${count === 1 ? 'producto' : 'productos'}`);
     }

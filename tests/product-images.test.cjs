@@ -5,6 +5,7 @@ const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const { synchronizeMenu } = require('../tools/generate-menu-html.cjs');
 
 test('el sitio sustituye imágenes vacías, ausentes y corruptas con un respaldo local', async (t) => {
   const root = path.resolve(__dirname, '..');
@@ -24,7 +25,7 @@ test('el sitio sustituye imágenes vacías, ausentes y corruptas con un respaldo
   const products = ['', missing, corrupt, photo].map((imagen, index) => ({
     id: `test-${index}`, nombre: `Producto ${index}`, categoria: 'Prueba',
     descripcion: 'Prueba de imagen', precio: 10, disponible: true,
-    destacado: index < 3, imagen
+    destacado: index < 3, imagen: imagen.slice(1)
   }));
   const catalog = `const menuItems = ${JSON.stringify(products)};`;
   const requests = [];
@@ -44,6 +45,9 @@ test('el sitio sustituye imágenes vacías, ausentes y corruptas con un respaldo
     let status = 200;
     try {
       body = pathname === '/js/menu-data.js' ? catalog : await fs.readFile(file);
+      if (pathname === '/index.html') {
+        body = synchronizeMenu(body.toString('utf8'), products, fallback.slice(1));
+      }
       if (failFallback && pathname === '/js/config.js') {
         body += `\nsiteConfig.images.productPlaceholder = "${missingFallback}";`;
       }

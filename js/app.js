@@ -54,28 +54,37 @@ function getCartItemCount() {
   return cartItems.reduce((total, item) => total + item.quantity, 0);
 }
 
-// Obtiene la imagen real asociada a un producto.
+// Aplica el mismo respaldo a imágenes estáticas y creadas por la app.
+function watchProductImage(image) {
+  const fallback = siteConfig.images.productPlaceholder;
+  function markUnavailable() {
+    image.dataset.imageState = "unavailable";
+  }
+  function showFallback() {
+    image.dataset.imageState = "fallback";
+    image.addEventListener("error", markUnavailable, { once: true });
+    image.src = fallback;
+  }
+
+  if (image.dataset.imageState === "fallback") {
+    image.addEventListener("error", markUnavailable, { once: true });
+    if (image.complete && image.naturalWidth === 0 && image.getAttribute("src")) markUnavailable();
+  } else if (image.complete && image.naturalWidth === 0 && image.getAttribute("src")) {
+    showFallback();
+  } else {
+    image.addEventListener("error", showFallback, { once: true });
+  }
+}
+
 function createProductImage(product, { alt = "", lazy = false } = {}) {
   const image = document.createElement("img");
   const source = product?.imagen?.trim();
   const fallback = siteConfig.images.productPlaceholder;
   image.alt = alt;
   if (lazy) image.loading = "lazy";
-
-  function showFallback() {
-    image.dataset.imageState = "fallback";
-    image.addEventListener("error", () => {
-      image.dataset.imageState = "unavailable";
-    }, { once: true });
-    image.src = fallback;
-  }
-
-  if (source && source !== fallback) {
-    image.addEventListener("error", showFallback, { once: true });
-    image.src = source;
-  } else {
-    showFallback();
-  }
+  if (!source || source === fallback) image.dataset.imageState = "fallback";
+  watchProductImage(image);
+  image.src = source || fallback;
   return image;
 }
 
@@ -229,87 +238,26 @@ function restoreCartItems(storedItems) {
   cartItems.splice(0, cartItems.length, ...storedItems);
 }
 
-// Crea una tarjeta visual para cada producto del menu.
-function createMenuCard(product) {
-  const card = document.createElement("article");
-  card.className = "menu-card";
-
-  const image = document.createElement("div");
-  image.className = "dish-image";
-
-  const imageElement = createProductImage(product, { alt: product.nombre, lazy: true });
-  image.append(imageElement);
-
-  const content = document.createElement("div");
-  content.className = "dish-content";
-
-  const title = document.createElement("h3");
-  title.textContent = product.nombre;
-
-  const description = document.createElement("p");
-  description.textContent = product.descripcion;
-
-  const footer = document.createElement("div");
-  footer.className = "dish-footer";
-
-  const price = document.createElement("p");
-  price.className = "price";
-  price.textContent = siteConfig.order.pricesApproved === true ? formatPrice(product.precio) : "Precio pendiente";
-
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = "Agregar";
-  button.dataset.productId = product.id;
-  button.disabled = !product.disponible;
-  button.setAttribute("aria-label", `Agregar ${product.nombre}`);
-
-  footer.append(price, button);
-  content.append(title, description, footer);
-  card.append(image, content);
-
-  return card;
-}
-
-// Pinta los productos disponibles o informa cuando la categoria esta vacia.
-function renderMenu(products) {
-  if (!menuGrid) {
-    return 0;
-  }
-
-  menuGrid.innerHTML = "";
-
-  const availableProducts = products.filter((product) => product.disponible);
-
-  if (availableProducts.length === 0) {
-    const emptyMessage = document.createElement("p");
-    emptyMessage.className = "menu-empty";
-    emptyMessage.textContent = "No hay productos disponibles en esta categoría.";
-    menuGrid.append(emptyMessage);
-    return 0;
-  }
-
-  availableProducts.forEach((product) => {
-    menuGrid.append(createMenuCard(product));
-  });
-  return availableProducts.length;
-}
-
-// Compara categorias sin depender de espacios accidentales en los datos.
-function getProductsByCategory(category) {
-  return menuItems.filter((product) => product.categoria.trim() === category.trim());
-}
-
-// Sincroniza la categoria seleccionada y muestra solo sus productos.
+// Reutiliza las secciones del catálogo estático.
 function selectCategory(category) {
+  if (!menuGrid.hasAttribute("data-interactive")) return;
+  const groups = [...menuGrid.querySelectorAll(".menu-category")];
+  const active = groups.find(group => group.dataset.menuCategory === category);
+  if (!active) return;
+
   categorySelect.value = category;
-  categoryList.querySelectorAll("button[data-category]").forEach((button) => {
-    const isActive = button.dataset.category === category;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-pressed", String(isActive));
-    if (isActive) revealCategoryButton(button);
+  const focusedGroup = document.activeElement?.closest(".menu-category");
+  if (focusedGroup && focusedGroup !== active) categorySelect.focus({ preventScroll: true });
+  groups.forEach(group => { group.hidden = group !== active; });
+
+  categoryList.querySelectorAll("button[data-category]").forEach(button => {
+    const selected = button.dataset.category === category;
+    button.classList.toggle("is-active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+    if (selected) revealCategoryButton(button);
   });
 
-  const count = renderMenu(getProductsByCategory(category));
+  const count = active.querySelectorAll(".menu-card").length;
   categoryStatus.textContent = `${category} · ${count} ${count === 1 ? "producto" : "productos"}`;
 }
 
@@ -720,7 +668,7 @@ function renderCart() {
 function handleMenuClick(event) {
   const addButton = event.target.closest("button[data-product-id]");
 
-  if (!addButton || !menuGrid.contains(addButton)) {
+  if (!menuGrid.hasAttribute("data-interactive") || !addButton || !menuGrid.contains(addButton)) {
     return;
   }
 
@@ -1004,7 +952,6 @@ function initializeApp() {
       link.textContent = "Pedir por WhatsApp";
     });
   }
-  renderCategories();
   renderFeaturedProducts();
   document.querySelector("#featured-grid").addEventListener("keydown", handleFeaturedNavigation);
   restoreCartItems(loadCartFromStorage());
@@ -1040,7 +987,9 @@ function initializeApp() {
     link.addEventListener("click", handleMobilePanelRequest);
   });
 
+  initializeMenu();
   initializeSiteNavigation();
+  whatsappButton.hidden = false;
 
   console.log("Carrito listo para agregar productos.");
 }
@@ -1088,28 +1037,79 @@ function applySiteConfig() {
   });
 }
 
-function renderCategories() {
-  const categories = [...new Set(menuItems.map((product) => product.categoria.trim()))];
-  categoryList.replaceChildren();
-  categorySelect.replaceChildren();
-  categorySelect.disabled = categories.length === 0;
-  categories.forEach((category) => {
-    const button = document.createElement('button');
-    button.type = 'button';
+function initializeMenu() {
+  const groups = [...menuGrid.querySelectorAll(".menu-category")];
+  const index = menuGrid.querySelector(".menu-category-index");
+  const picker = categorySelect?.closest(".category-picker");
+  if (!index || !picker || !groups.length) return;
+
+  const categories = [...new Set(menuItems.map(product => product.categoria.trim()))];
+  if (categories.length !== groups.length) return;
+  const cards = [];
+  for (const [i, group] of groups.entries()) {
+    const category = categories[i];
+    const products = menuItems.filter(product => product.categoria.trim() === category && product.disponible);
+    const nodes = [...group.querySelectorAll(".menu-card")];
+    if (group.dataset.menuCategory !== category || nodes.length !== products.length) return;
+    for (const [j, card] of nodes.entries()) {
+      const product = products[j];
+      const footer = card.querySelector(".dish-footer");
+      const price = footer?.querySelector(".price");
+      const image = card.querySelector(".dish-image img");
+      if (card.dataset.menuProductId !== product.id || !price || !image) return;
+      cards.push({ footer, price, image, product });
+    }
+  }
+
+  categories.forEach(category => {
+    const button = document.createElement("button");
+    button.type = "button";
     button.dataset.category = category;
     button.textContent = category;
-    button.setAttribute('aria-controls', 'menu-grid');
+    button.setAttribute("aria-controls", "menu-grid");
     categoryList.append(button);
-    const option = document.createElement('option');
+    const option = document.createElement("option");
     option.value = category;
     option.textContent = category;
     categorySelect.append(option);
   });
-  if (categories.length) selectCategory(categories[0]);
-  else {
-    renderMenu([]);
-    categoryStatus.textContent = "";
+  for (const { footer, price, image, product } of cards) {
+    watchProductImage(image);
+    if (siteConfig.order.pricesApproved === true) price.textContent = formatPrice(product.precio);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Agregar";
+    button.dataset.productId = product.id;
+    button.hidden = true;
+    button.setAttribute("aria-label", `Agregar ${product.nombre}`);
+    footer.append(button);
   }
+
+  function categoryFromHash() {
+    try { return groups.find(group => group.id === decodeURIComponent(location.hash.slice(1))); }
+    catch { return undefined; }
+  }
+  function showHashCategory() {
+    const group = categoryFromHash();
+    if (!group) return;
+    if (group.hidden) selectCategory(group.dataset.menuCategory);
+    requestAnimationFrame(() => {
+      if (categoryFromHash() === group && !group.hidden) group.scrollIntoView({ behavior: "instant" });
+    });
+  }
+
+  const initial = categoryFromHash();
+  const focusedLink = index.contains(document.activeElement);
+  const focusedCategory = document.activeElement?.closest(".menu-category");
+  menuGrid.setAttribute("data-interactive", "");
+  menuGrid.querySelectorAll(".menu-card button").forEach(button => { button.hidden = false; });
+  picker.hidden = false;
+  categoryList.hidden = false;
+  if (focusedLink) categorySelect.focus({ preventScroll: true });
+  index.hidden = true;
+  selectCategory(initial?.dataset.menuCategory ?? focusedCategory?.dataset.menuCategory ?? categories[0]);
+  window.addEventListener("hashchange", showHashCategory);
+  if (initial) showHashCategory();
 }
 
 function handleFeaturedNavigation(event) {
