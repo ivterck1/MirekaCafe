@@ -142,8 +142,8 @@ test('anclas, historial y navegación activa conservan catálogo y carrito', asy
           updateWhatsAppButtonState();
         });
         assert.deepEqual(await page.evaluate(() => window.testOpened), []);
-        assert.equal(await page.evaluate(() => siteConfig.order.pricesApproved), false);
-        assert.equal(await page.evaluate(() => siteConfig.whatsapp.enabled), false);
+        assert.equal(await page.evaluate(() => siteConfig.order.pricesApproved), true);
+        assert.equal(await page.evaluate(() => siteConfig.whatsapp.enabled), true);
         assert.equal(await page.evaluate(() => menuItems.length), 101);
         if (width < 768) await page.keyboard.press('Escape');
         await page.reload({ waitUntil: 'networkidle' });

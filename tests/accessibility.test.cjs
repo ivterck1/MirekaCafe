@@ -131,11 +131,12 @@ test('D02–D05: avisos disponibles, semántica y espaciado sin perder el carrit
           const bounds = await page.locator('#mobile-order-count').evaluate(e => {
             const range = new Range(); range.selectNodeContents(e);
             return { box: e.getBoundingClientRect().toJSON(), text: [...range.getClientRects()].map(r => r.toJSON()),
-              next: e.nextElementSibling.getBoundingClientRect().toJSON(), bar: e.closest('.mobile-order-bar').getBoundingClientRect().toJSON() };
+              next: e.nextElementSibling.getBoundingClientRect().toJSON(), bar: e.closest('.mobile-order-bar').getBoundingClientRect().toJSON(),
+              tracks: getComputedStyle(e.parentElement).gridTemplateColumns };
           });
           assert.ok(bounds.text.every(r => r.right <= bounds.box.right + 1 && r.left >= bounds.box.left - 1));
           assert.ok(bounds.text.every(r => r.right <= bounds.next.left));
-          assert.equal(bounds.bar.height, 72, 'se mantiene incluso con espaciado WCAG y tres dígitos');
+          assert.equal(bounds.bar.height, 72, `se mantiene con espaciado WCAG y tres dígitos (${bounds.tracks}, ${bounds.text.map(r => Math.round(r.width)).join('/')})`);
           assert.equal(await page.locator('#mobile-order-count').textContent(), '101 productos');
           await page.locator('#mobile-order-toggle').focus();
           await page.keyboard.press('Enter');
@@ -144,8 +145,8 @@ test('D02–D05: avisos disponibles, semántica y espaciado sin perder el carrit
           assert.equal(await page.locator('#mobile-order-toggle').evaluate(e => e === document.activeElement), true);
         }
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-        assert.equal(await page.evaluate(() => siteConfig.order.pricesApproved), false);
-        assert.equal(await page.evaluate(() => siteConfig.whatsapp.enabled), false);
+        assert.equal(await page.evaluate(() => siteConfig.order.pricesApproved), true);
+        assert.equal(await page.evaluate(() => siteConfig.whatsapp.enabled), true);
         assert.deepEqual(errors, []);
       } finally { await page.close(); }
     });

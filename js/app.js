@@ -400,7 +400,7 @@ function validateCartForOrder() {
       errors.push(`La cantidad de "${item.name}" no es válida.`);
     }
 
-    if (!Number.isFinite(item.price) || item.price <= 0 || item.price === 1 ||
+    if (!Number.isFinite(item.price) || item.price <= 0 ||
         Math.round(item.price * 100) / 100 !== item.price ||
         item.price !== product.precio || item.name !== product.nombre) {
       errors.push(`El precio de "${item.name}" no es válido.`);

@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const http = require('node:http');
 const path = require('node:path');
+const {loadConfig} = require('../tools/sync-seo.cjs');
+const {synchronizeMenu} = require('../tools/generate-menu-html.cjs');
 
 async function startSite() {
   const root = path.resolve(__dirname, '..');
@@ -30,6 +32,10 @@ async function startSite() {
   return server;
 }
 const catalog = vm.runInNewContext(fs.readFileSync('js/menu-data.js', 'utf8') + '\nmenuItems;');
+const config = loadConfig();
+const amount = catalog.find(product => product.disponible).precio;
+const currency = new Intl.NumberFormat(config.order.locale, {style:'currency', currency:config.order.currency});
+const informativeHtml = synchronizeMenu(fs.readFileSync('index.html', 'utf8'), catalog, config.images.productPlaceholder);
 const missingImages = new Set(catalog.map(product => product.imagen)
   .filter(image => image && !fs.existsSync(image)));
 const placeholder = fs.readFileSync('assets/images/products/placeholder.svg');
@@ -60,21 +66,15 @@ async function checkSite(browser, width, siteUrl) {
         ? route.fulfill({ contentType: 'image/svg+xml', body: placeholder })
         : route.continue();
     });
-    // Los valores aprobados y los precios de prueba solo existen en el navegador.
+    // El modo informativo y el de solo precios son fixtures del navegador.
+    await page.route(url => url.href === new URL(siteUrl).href, route => approvePrices ? route.continue() :
+      route.fulfill({contentType:'text/html; charset=utf-8', body:informativeHtml}));
     await page.route('**/js/config.js?*', route => {
-      if (!approvePrices) return route.continue();
-      const config = fs.readFileSync('js/config.js', 'utf8');
+      if (enableWhatsApp) return route.continue();
+      const source = fs.readFileSync('js/config.js', 'utf8');
       return route.fulfill({
         contentType: 'text/javascript',
-        body: config + `\nsiteConfig.order.pricesApproved = true; siteConfig.whatsapp.enabled = ${enableWhatsApp};`
-      });
-    });
-    await page.route('**/js/menu-data.js?*', route => {
-      if (!approvePrices) return route.continue();
-      const data = fs.readFileSync('js/menu-data.js', 'utf8');
-      return route.fulfill({
-        contentType: 'text/javascript',
-        body: data + '\nmenuItems[0].precio = 65;'
+        body: source + `\nsiteConfig.order.pricesApproved = ${approvePrices}; siteConfig.whatsapp.enabled = false;`
       });
     });
     await page.addInitScript(() => {
@@ -106,7 +106,7 @@ async function checkSite(browser, width, siteUrl) {
     await categories.first().click();
     assert.equal(await categorySelect.inputValue(), categoryNames[0]);
     assert.equal(await page.locator('#featured-grid h3').count(), 3);
-    assert.doesNotMatch(await page.locator('#menu-grid, #featured-grid').allTextContents().then(parts => parts.join(' ')), /\$1\.00/);
+    assert.doesNotMatch(await page.locator('#menu-grid, #featured-grid').allTextContents().then(parts => parts.join(' ')), /\$\s*\d/);
     assert.match(await page.locator('#catalog-price-status').innerText(), /precios están pendientes/);
 
     const send = page.locator('.whatsapp-button');
@@ -154,7 +154,7 @@ async function checkSite(browser, width, siteUrl) {
       assert.equal(await page.locator('#customer-name').inputValue(), 'Ana Prueba');
     }
     assert.equal(await page.locator('#cart-total').innerText(), '—');
-    assert.doesNotMatch(await page.locator('#cart-items').innerText(), /\$1\.00/);
+    assert.doesNotMatch(await page.locator('#cart-items').innerText(), /\$\s*\d/);
     assert.equal(await send.isDisabled(), true);
     await page.locator('#customer-name').fill('Ana Prueba');
     await page.locator('[value="recoger"]').check();
@@ -174,26 +174,28 @@ async function checkSite(browser, width, siteUrl) {
     if (width === 390) {
       await page.reload();
       await openCart();
-      assert.match(await page.locator('#cart-total').innerText(), /65\.00/);
+      assert.equal(await page.locator('#cart-total').innerText(), currency.format(amount));
       assert.equal(await send.isDisabled(), true);
       await page.evaluate(() => handleWhatsAppClick());
       assert.deepEqual(await page.evaluate(() => window.testOrderUrls), []);
     }
     enableWhatsApp = true;
     await page.reload();
+    assert.equal(await page.evaluate(() => siteConfig.order.pricesApproved && siteConfig.whatsapp.enabled), true);
     assert.equal(await page.locator('#header-cart-count').innerText(), '1');
     await openCart();
-    assert.match(await page.locator('#cart-total').innerText(), /65\.00/);
+    assert.equal(await page.locator('#cart-total').innerText(), currency.format(amount));
     const increase = page.locator('[data-action="increase"]');
     const decrease = page.locator('[data-action="decrease"]');
     await increase.focus();
     await page.keyboard.press('Enter');
     assert.equal(await increase.evaluate(el => el === document.activeElement), true);
-    assert.equal(await page.evaluate(() => calculateCartSubtotal()), 130);
+    assert.equal(await page.evaluate(() => calculateCartSubtotal()), amount * 2);
+    assert.equal(await page.locator('#cart-total').innerText(), currency.format(amount * 2));
     await decrease.focus();
     await page.keyboard.press('Enter');
     assert.equal(await decrease.evaluate(el => el === document.activeElement), true);
-    assert.equal(await page.evaluate(() => calculateCartSubtotal()), 65);
+    assert.equal(await page.evaluate(() => calculateCartSubtotal()), amount);
 
     await page.locator('#customer-name').fill('Ana Prueba');
     await page.locator('[value="domicilio"]').check();
@@ -204,19 +206,21 @@ async function checkSite(browser, width, siteUrl) {
     assert.deepEqual(await page.evaluate(() => window.testOrderUrls), []);
 
     await address.fill('Calle de prueba 123');
-    await page.evaluate(() => { cartItems[0].price = 1; handleWhatsAppClick(); });
+    await page.evaluate(() => { cartItems[0].price += 1; handleWhatsAppClick(); });
     assert.match(await page.locator('#order-message').innerText(), /precio/);
     assert.deepEqual(await page.evaluate(() => window.testOrderUrls), []);
-    await page.evaluate(() => { cartItems[0].price = 65; });
+    await page.evaluate(price => { cartItems[0].price = price; }, amount);
     await send.click();
     const [deliveryUrl] = await page.evaluate(() => window.testOrderUrls);
     const delivery = new URL(deliveryUrl);
-    assert.equal(delivery.origin + delivery.pathname, 'https://wa.me/525562524763');
+    assert.ok(delivery.origin === 'https://wa.me' && delivery.pathname.slice(1) === config.whatsapp.number,
+      'el destino coincide con el número comercial autorizado');
     const deliveryMessage = delivery.searchParams.get('text');
     assert.match(deliveryMessage, /Mireka Café[\s\S]*Ana Prueba/);
     assert.match(deliveryMessage, /Entrega: Servicio a domicilio/);
     assert.match(deliveryMessage, /Dirección: Calle de prueba 123/);
-    assert.match(deliveryMessage, /1 x .*\(\$65\.00 c\/u\) = \$65\.00[\s\S]*Total: \$65\.00/);
+    assert.ok(deliveryMessage.includes(`1 x ${catalog.find(product => product.disponible).nombre} (${currency.format(amount)} c/u) = ${currency.format(amount)}`));
+    assert.ok(deliveryMessage.includes(`Total: ${currency.format(amount)}`));
 
     await page.locator('[value="recoger"]').check();
     assert.equal(await address.isVisible(), false);

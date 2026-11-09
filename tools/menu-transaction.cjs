@@ -249,7 +249,9 @@ async function apply({excel, plan, directory, approval, authorize, siteRoot = ro
         }
       }
       await durableWrite(path.join(folder, 'respaldo.json'), json(meta));
-      await log(folder, 'Aplicación autorizada', {...meta, cambios:preview.cambios, solicitudes:preview.negocio.solicitudes,
+      await log(folder, 'Aplicación autorizada', {...meta, cambios:preview.cambios,
+        solicitudesPendientes:report.comercial.explicito ? [] : preview.negocio.solicitudes,
+        solicitudesResueltas:report.comercial.explicito ? preview.negocio.solicitudes : [],
         advertencias:preview.advertencias, errores:preview.errores, validaciones:'plan, dependencias, candidatos, SEO y bloqueos comerciales'});
       if (!Buffer.from(workbook).equals(await regular(excel)) ||
           !isDeepStrictEqual(preview, JSON.parse(await regular(plan)))) throw new Error('Excel o plan cambiado durante el respaldo.');
@@ -264,7 +266,13 @@ async function apply({excel, plan, directory, approval, authorize, siteRoot = ro
       const manifestPath = path.join(folder, 'ARCHIVOS_PARA_PUBLICAR.txt');
       await durableWrite(manifestPath, listing);
       if ((await regular(manifestPath)).toString() !== listing) throw new Error('Manifiesto inconsistente.');
-      await log(folder, 'Aplicación verificada', {resultado:'aplicado', manifiestoSha256:hash(listing)});
+      const effective = loadConfig(site);
+      await log(folder, 'Aplicación verificada', {
+        resultado:'aplicado', tipoCandidato:report.comercial.explicito ? 'comercial' : 'solo contenido',
+        autorizacionComercialAplicada:Boolean(autorizacionComercial),
+        estadoFinal:{mostrarPrecios:effective.order.pricesApproved, whatsappActivo:effective.whatsapp.enabled,
+          destinatario:effective.whatsapp.number}, manifiestoSha256:hash(listing)
+      });
       await state(folder, 'aplicado');
       return folder;
     } catch (error) {

@@ -34,9 +34,11 @@ function createOperations({siteRoot = root, privateRoot} = {}) {
       const {report} = await review(await fs.readFile(excel), siteRoot);
       return {report, file:await writePreview(report)};
     },
-    async generate(excel, preview, commercial) {
+    async generate(excel, preview, commercial = false) {
       const directory = await writeCandidates(await prepare(excel, preview, commercial));
-      return {directory, report:JSON.parse(await fs.readFile(path.join(directory, 'reporte-diferencias.json'), 'utf8'))};
+      const report = JSON.parse(await fs.readFile(path.join(directory, 'reporte-diferencias.json'), 'utf8'));
+      if (report.comercial.explicito !== commercial) throw new Error('El candidato generado no coincide con el modo seleccionado.');
+      return {directory, report};
     },
     async validate(excel, preview, candidate) {
       const report = await transactions.validateBundle(candidate.directory, await prepare(excel, preview, candidate.report.comercial.explicito));

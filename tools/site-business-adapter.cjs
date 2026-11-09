@@ -35,6 +35,7 @@ function prepareBusiness(root, business, report, commercial) {
     impacts.push({campo, superficies:surfaces[campo], estado:pending ? 'verificación o autorización pendiente' : 'cambio candidato'});
     if (pending) continue;
     const [group, key] = keys[campo];
+    if (campo === 'whatsapp') continue; // Se escribe en el bloque canónico.
     assignments.push(`siteConfig.${group}.${key} = ${JSON.stringify(nuevo)};`);
     if (campo === 'descripcion') assignments.push(`siteConfig.seo.description = ${JSON.stringify(nuevo)};`);
     if (campo === 'nombre') {
@@ -45,13 +46,25 @@ function prepareBusiness(root, business, report, commercial) {
       }
     }
   }
-  for (const [key, value, previous] of [
-    ['order.pricesApproved', commercial.nuevo.mostrarPrecios, business.config.order.pricesApproved],
-    ['whatsapp.enabled', commercial.nuevo.whatsappActivo, business.config.whatsapp.enabled]
-  ]) {
-    if (value !== previous) assignments.push(`siteConfig.${key} = ${value};`);
+  let source = business.source.toString('utf8');
+  const {destinatario, whatsappActivo, mostrarPrecios} = commercial.nuevo;
+  const overrides = /^[ \t]*siteConfig\.whatsapp\.(?:number|enabled) = (?:"(?:[^"\\\r\n]|\\.)*"|true|false);[ \t]*(?:\r?\n|$)/gm;
+  const priceOverrides = /^[ \t]*siteConfig\.order\.pricesApproved = (?:true|false);[ \t]*(?:\r?\n|$)/gm;
+  function replaceUnique(pattern, replacement, field) {
+    if ([...source.matchAll(pattern)].length !== 1) throw new Error(`No se pudo identificar el bloque canónico de ${field}.`);
+    source = source.replace(pattern, replacement);
   }
-  const source = business.source.toString('utf8');
+  if (destinatario !== business.config.whatsapp.number || whatsappActivo !== business.config.whatsapp.enabled ||
+      [...source.matchAll(overrides)].length) {
+    replaceUnique(/^(\s*whatsapp:\s*\{\s*number:\s*)"(?:[^"\\\r\n]|\\.)*"(\s*,\s*enabled:\s*)(?:true|false)(\s*\})/gm,
+      (_, start, separator, end) => start + JSON.stringify(destinatario) + separator + whatsappActivo + end, 'WhatsApp');
+    source = source.replace(overrides, '');
+  }
+  if (mostrarPrecios !== business.config.order.pricesApproved || [...source.matchAll(priceOverrides)].length) {
+    replaceUnique(/^([ \t]*pricesApproved:\s*)(?:true|false)(\s*,)/gm,
+      (_, start, end) => start + mostrarPrecios + end, 'precios');
+    source = source.replace(priceOverrides, '');
+  }
   const eol = source.includes('\r\n') ? '\r\n' : '\n';
   const candidate = assignments.length ? source.trimEnd() + eol + eol +
     ['// Cambios comerciales propuestos desde Excel.', ...assignments, ''].join(eol) : source;

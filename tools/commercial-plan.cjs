@@ -1,8 +1,10 @@
 const {createHash} = require('node:crypto');
 const {isDeepStrictEqual} = require('node:util');
 
-const validPrice = value => Number.isFinite(value) && value > 0 && value !== 1 &&
+const validPrice = value => Number.isFinite(value) && value > 0 &&
   Number.isSafeInteger(Math.round(value * 100)) && Math.round(value * 100) / 100 === value;
+const validDestination = number => typeof number === 'string' && /^[1-9]\d{7,14}$/.test(number) &&
+  number.length !== 10 && (!number.startsWith('52') || /^52\d{10}$/.test(number));
 
 function snapshot(items, config, proposed = {}) {
   return {
@@ -33,7 +35,9 @@ function commercialPreview(items, currentItems, config, report) {
     bloqueos.push(`Hay ${preciosInvalidos.length} productos ofrecidos sin precio autorizable o no hay productos disponibles.`);
   }
   if (objetivo.mostrarPrecios && objetivo.moneda !== 'MXN') bloqueos.push('La autorización de precios de este proyecto requiere MXN.');
-  if (objetivo.whatsappActivo && !/^[1-9]\d{7,14}$/.test(objetivo.destinatario)) bloqueos.push('El destinatario WhatsApp internacional es inválido.');
+  if (objetivo.whatsappActivo && !validDestination(objetivo.destinatario)) {
+    bloqueos.push('El destinatario WhatsApp internacional es inválido. Incluye el código de país; para México, 52 y diez dígitos.');
+  }
   return {actual, objetivo, preciosInvalidos, bloqueos};
 }
 
@@ -48,7 +52,7 @@ function selectCommercial(report, explicit) {
   if (isActive && !explicit && (!next.mostrarPrecios || next.moneda !== 'MXN' ||
       !next.productos.some(product => product.disponible) ||
       next.productos.some(product => product.disponible && !validPrice(product.precio)) ||
-      (next.whatsappActivo && !/^[1-9]\d{7,14}$/.test(next.destinatario)))) {
+      (next.whatsappActivo && !validDestination(next.destinatario)))) {
     throw new Error('El estado comercial vigente es inválido. Desactívalo explícitamente.');
   }
   const huella = requiresApproval ? createHash('sha256').update(JSON.stringify({report, next})).digest('hex') : null;

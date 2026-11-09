@@ -3,6 +3,21 @@ const path = require('node:path');
 const {escape, loadConfig, synchronize} = require('./sync-seo.cjs');
 const {validPhone, validSocialUrl} = require('./business-preview.cjs');
 
+const socialIcons = {
+  instagram: {
+    label:'Instagram',
+    shape:'<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1"/>'
+  },
+  facebook: {
+    label:'Facebook',
+    shape:'<path d="M14 21v-8h3l.5-3H14V8c0-1 .3-1.5 1.7-1.5H18V3.8a19 19 0 0 0-2.6-.2C12.8 3.6 11 5.2 11 8v2H8v3h3v8z"/>'
+  },
+  tiktok: {
+    label:'TikTok',
+    shape:'<path d="M14 3h3a5 5 0 0 0 4 4v3a8 8 0 0 1-4-1.4V16a5.5 5.5 0 1 1-5.5-5.5h.5v3a2.5 2.5 0 1 0 2 2.5z"/>'
+  }
+};
+
 function replaceBlock(html, label, lines, indent) {
   const start = `<!-- ${label}:START -->`;
   const end = `<!-- ${label}:END -->`;
@@ -28,13 +43,12 @@ function synchronizeBusiness(html, {business, contact, images}) {
   if (validPhone(contact.phone)) {
     lines.push(`    <p><a class="contact-phone" href="tel:${escape(contact.phone)}">Teléfono: ${escape(contact.phone)}</a></p>`);
   }
-  const socials = {instagram:'Instagram', facebook:'Facebook', tiktok:'TikTok'};
-  const links = Object.entries(socials)
+  const links = Object.entries(socialIcons)
     .filter(([field]) => validSocialUrl(field, contact[field]))
-    .map(([field, label]) => `      <a href="${escape(contact[field])}">${label}</a>`);
-  if (links.length) lines.push('    <nav aria-label="Redes sociales">', ...links, '    </nav>');
+    .map(([field, {label, shape}]) => `      <a href="${escape(contact[field])}" target="_blank" rel="noopener noreferrer" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">${shape}</svg></a>`);
+  if (links.length) lines.push('    <nav class="footer-social" aria-label="Redes sociales">', ...links, '    </nav>');
   lines.push('  </div>', '</div>',
-    `<img src="${escape(images.logo)}" alt="" width="768" height="496">`);
+    `<img class="footer-logo" src="${escape(images.logo)}" alt="" width="768" height="496">`);
   const story = replaceBlock(html, 'BUSINESS-STORY', [`<p>${escape(business.description)}</p>`], '            ');
   return replaceBlock(story, 'BUSINESS-FOOTER', lines, '        ');
 }

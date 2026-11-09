@@ -10,10 +10,12 @@ const { loadConfig } = require('../tools/sync-seo.cjs');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const items = readMenu(fs.readFileSync(path.join(root, 'js/menu-data.js'), 'utf8'));
-const fallback = loadConfig().images.productPlaceholder;
+const config = loadConfig();
+const fallback = config.images.productPlaceholder;
+const currency = new Intl.NumberFormat(config.order.locale, {style:'currency', currency:config.order.currency});
 
 test('catálogo determinista, precios pendientes y escritura limitada a los marcadores', () => {
-  assert.equal(synchronizeMenu(html, items, fallback), html);
+  assert.equal(synchronizeMenu(html, items, fallback, config.order), html);
   const sample = { id: 'a', nombre: '<A & "B">', descripcion: '<script>no</script>', categoria: 'A & B',
     imagen: '', precio: 1, disponible: true };
   const input = [sample, { ...sample, id: 'b', categoria: 'A-B', disponible: false }];
@@ -78,7 +80,8 @@ test('catálogo público en raíz y subdirectorio con mejora progresiva y salida
         assert.equal(await page.locator(`${cards} button`).count(), 0);
         assert.equal(await page.locator('.whatsapp-button').isVisible(), false);
         assert.equal(await page.locator('#category-select').isVisible(), false);
-        assert.ok((await page.locator(`${cards} .price`).allTextContents()).every(text => text === 'Precio pendiente'));
+        assert.deepEqual(await page.locator(`${cards} .price`).allTextContents(),
+          items.filter(item => item.disponible).map(item => currency.format(item.precio)));
         const ids = await page.locator('[id]').evaluateAll(nodes => nodes.map(node => node.id));
         assert.equal(new Set(ids).size, ids.length);
         const links = page.locator('.menu-category-index a');
@@ -128,7 +131,7 @@ test('catálogo público en raíz y subdirectorio con mejora progresiva y salida
           await page.waitForFunction(() => document.querySelector('#cart-status').textContent.includes('1 producto en el pedido.'));
           assert.equal(await page.locator('#mobile-order-bar').evaluate(element => element.getBoundingClientRect().height), 72);
         }
-        assert.equal(await page.locator('.whatsapp-button').isDisabled(), true);
+        assert.equal(await page.locator('.whatsapp-button').isDisabled(), false);
         await page.reload();
         assert.equal(await page.locator('#header-cart-count').textContent(), '1');
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);

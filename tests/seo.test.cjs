@@ -12,7 +12,7 @@ const {serializeCatalog} = require('../tools/import-menu.cjs');
 const config = loadConfig();
 const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 const title = 'Mireka Café | Cafetería de autor y menú';
-const description = 'Conoce el menú de Mireka Café: café, bebidas, crepas y antojos. Consulta nuestras opciones de servicio y disfruta a tu manera.';
+const description = config.seo.description;
 
 test('sincronización idempotente y limitada al bloque SEO', () => {
   assert.equal(synchronize(html, config), html);
@@ -48,13 +48,16 @@ test('los textos editoriales se escapan sin crear etiquetas adicionales', () => 
   assert.ok(!output.includes('<prueba>'));
 });
 
-test('SEO no modifica inventario ni habilita operaciones comerciales', () => {
+test('SEO conserva el inventario, el estado comercial autorizado y noindex', () => {
   const menu = vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/menu-data.js'), 'utf8') + '\nmenuItems;');
   assert.equal(menu.length, 101);
   assert.equal(new Set(menu.map(p => p.categoria)).size, 18);
   assert.equal(new Set(menu.map(p => p.imagen)).size, 94);
-  assert.equal(config.order.pricesApproved, false);
-  assert.equal(config.whatsapp.enabled, false);
+  assert.equal(config.order.pricesApproved, true);
+  assert.equal(config.whatsapp.enabled, true);
+  assert.equal(config.seo.robots, 'noindex,follow');
+  assert.ok(/^52\d{6}7015$/.test(config.whatsapp.number), 'destinatario mexicano autorizado');
+  assert.deepEqual([...new Set(menu.map(p => p.precio))].sort((a,b) => a-b), Array.from({length:101}, (_, i) => i + 2));
   assert.equal(fs.existsSync(path.join(__dirname, '../robots.txt')), false);
 });
 
@@ -115,7 +118,9 @@ test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', 
         assert.equal(await page.title(), title);
         assert.equal(await page.locator('#business-contact').count(), 1);
         assert.match(await page.locator('#business-contact').innerText(), /Lunes a sábado/);
-        assert.equal(await page.locator('#business-contact a').count(), 0);
+        assert.deepEqual(await page.locator('.footer-social a').evaluateAll(links => links.map(link =>
+          [link.getAttribute('href'), link.target, link.rel])),
+        ['instagram', 'facebook', 'tiktok'].map(key => [config.contact[key], '_blank', 'noopener noreferrer']));
         assert.equal(await page.locator('.story-card').getByText(config.business.description, {exact:true}).count(), 1);
         const expected = { description, robots: 'noindex,follow', 'og:title': title, 'og:description': description,
           'og:type': 'website', 'og:site_name': 'Mireka Café', 'og:locale': 'es_MX', 'twitter:card': 'summary',
@@ -172,6 +177,9 @@ test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', 
       assert.equal(await contact.getByRole('link', {name:/Teléfono/}).getAttribute('href'), 'tel:+525500000001');
       const social = contact.getByRole('navigation', {name:'Redes sociales'});
       assert.deepEqual(await social.getByRole('link').evaluateAll(links => links.map(link => link.getAttribute('href'))), Object.values(profiles));
+      assert.deepEqual(await social.getByRole('link').evaluateAll(links =>
+        links.map(link => [link.target, link.rel])),
+      Object.values(profiles).map(() => ['_blank', 'noopener noreferrer']));
       assert.equal(await contact.evaluate(() => document.documentElement.scrollWidth), width);
     } finally { await page.close(); }
   });

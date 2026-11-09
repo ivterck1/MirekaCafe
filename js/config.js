@@ -13,7 +13,7 @@ const siteConfig = {
     locale: "es_MX",
     canonicalUrl: ""
   },
-  whatsapp: { number: "525562524763", enabled: false },
+  whatsapp: { number: "525578477015", enabled: true },
   hero: {
     eyebrow: "Mireka Café · Cafetería de Autor",
     title: "El sabor de tus mejores momentos.",
@@ -32,7 +32,7 @@ const siteConfig = {
     currency: "MXN",
     locale: "es-MX",
     storageKey: "landing-restaurante-base:cart:v1",
-    pricesApproved: false,
+    pricesApproved: true,
     deliveryModes: [
       { id: "recoger", label: "Recoger en establecimiento", requiresAddress: false },
       { id: "domicilio", label: "Servicio a domicilio", requiresAddress: true }
@@ -44,3 +44,10 @@ const siteConfig = {
     productPlaceholder: "assets/images/products/placeholder.svg?v=1.0.12"
   }
 };
+
+// Cambios comerciales propuestos desde Excel.
+siteConfig.business.description = "Café | Bebidas | Snacks | Regalos";
+siteConfig.seo.description = "Café | Bebidas | Snacks | Regalos";
+siteConfig.contact.instagram = "https://www.instagram.com/mirekacafe";
+siteConfig.contact.facebook = "https://www.facebook.com/mirekacafe";
+siteConfig.contact.tiktok = "https://www.tiktok.com/@mirekacafe";

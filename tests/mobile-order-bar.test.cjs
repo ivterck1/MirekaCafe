@@ -48,7 +48,7 @@ test('barra compacta conserva el diálogo, indicadores y persistencia', async (t
           const assertRow = async () => {
             const row = await toggle.evaluate(button => {
               const rect = button.getBoundingClientRect();
-              return { rect: rect.toJSON(), children: [...button.children].map(e => ({ rect: e.getBoundingClientRect().toJSON(),
+              return { rect: rect.toJSON(), children: [...button.children].filter(e => e.getClientRects().length).map(e => ({ rect: e.getBoundingClientRect().toJSON(),
                 clipped: e.textContent.trim().length > 0 && e.scrollWidth > e.clientWidth + 1 })), bar: button.parentElement.getBoundingClientRect().toJSON() };
             });
             assert.equal(row.rect.height, 56);
@@ -108,7 +108,7 @@ test('barra compacta conserva el diálogo, indicadores y persistencia', async (t
           routes: new Set(menuItems.map(p => p.imagen)).size, prices: siteConfig.order.pricesApproved,
           whatsapp: siteConfig.whatsapp.enabled, overflow: document.documentElement.scrollWidth > innerWidth,
           themes: [...document.querySelectorAll('meta[name="theme-color"]')].map(e => ({ content: e.content, parent: e.parentElement.tagName })) }));
-        assert.deepEqual(state, { products: 101, categories: 18, routes: 94, prices: false, whatsapp: false,
+        assert.deepEqual(state, { products: 101, categories: 18, routes: 94, prices: true, whatsapp: true,
           overflow: false, themes: [{ content: '#FFF9F6', parent: 'HEAD' }] });
         assert.deepEqual(errors, []);
       } finally { await page.close(); }

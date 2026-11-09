@@ -95,9 +95,14 @@ async function runStudio({config, operations, ask, write}) {
   }
   async function generate(commercial = false) {
     requirePreview();
+    if (!commercial && candidate?.report.comercial.explicito &&
+        await prompt('Hay un candidato comercial seleccionado. Escribe CONTENIDO para reemplazarlo: ') !== 'CONTENIDO') {
+      print('Se conserva el candidato comercial.');
+      return;
+    }
     candidate = undefined;
     candidate = await operations.generate(excel, preview, commercial);
-    print(`Candidatos: ${candidate.directory}\nArchivos modificados: ${candidate.report.publicarTrasRevision.join(', ') || 'ninguno'}`);
+    print(`Candidato seleccionado: ${commercial ? 'comercial' : 'solo contenido'}\nCandidatos: ${candidate.directory}\nArchivos modificados: ${candidate.report.publicarTrasRevision.join(', ') || 'ninguno'}`);
   }
   async function authorizeCommercial({anterior, nuevo, huella, frase}) {
     const mode = state => `precios ${state.mostrarPrecios ? 'SI' : 'NO'}, WhatsApp ${state.whatsappActivo ? 'SI' : 'NO'}`;
@@ -110,6 +115,8 @@ async function runStudio({config, operations, ask, write}) {
   async function apply() {
     if (!candidate) throw new Error('Primero genera los candidatos de la vista previa vigente.');
     const reviewed = await operations.validate(excel, preview, candidate);
+    const {explicito, nuevo} = reviewed.comercial;
+    print(`Aplicación seleccionada: ${explicito ? 'comercial' : 'solo contenido'}. Estado previsto: precios ${nuevo.mostrarPrecios ? 'SI' : 'NO'}, WhatsApp ${nuevo.whatsappActivo ? 'SI' : 'NO'}.`);
     if (!reviewed.publicarTrasRevision.length) throw new Error('El candidato no contiene archivos modificados.');
     const pending = new Set(reviewed.impactosComerciales.filter(impact => impact.estado !== 'cambio candidato').map(impact => impact.campo));
     const pendingChange = change => change.hoja === 'DATOS_NEGOCIO' && pending.has(change.campo);
@@ -127,6 +134,8 @@ async function runStudio({config, operations, ask, write}) {
     preview = candidate = undefined;
     const info = await operations.backupInfo(folder);
     print(`Aplicación verificada. Respaldo: ${info.id}\nRuta: ${info.ruta}\nFecha UTC: ${info.fecha} · Estado: ${info.estado}\nBitácora: ${path.join(folder, 'BITACORA.txt')}\nManifiesto: ${path.join(folder, 'ARCHIVOS_PARA_PUBLICAR.txt')}`);
+    print(reviewed.comercial.huella ? 'Aplicación comercial completada.' : 'Aplicación de contenido completada. No se aplicaron solicitudes de activación.');
+    print(`Estado efectivo: precios ${nuevo.mostrarPrecios ? 'SI' : 'NO'}, WhatsApp ${nuevo.whatsappActivo ? 'SI' : 'NO'}.`);
   }
   async function backup(restore) {
     const backups = await operations.listBackups();

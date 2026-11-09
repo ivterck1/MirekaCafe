@@ -3,11 +3,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
+const {execFileSync} = require('node:child_process');
 const XLSX = require('xlsx');
-const {loadBaseline, preview, templateRows} = require('../tools/catalog-preview.cjs');
-const {review, publicFiles, root, hash} = require('../tools/candidate-plan.cjs');
-const {prepareCandidates, writeCandidates} = require('../tools/generate-candidates.cjs');
-const {readMenu} = require('../tools/generate-menu-html.cjs');
+const {loadBaseline, preview:previewCatalog, templateRows:rowsFor} = require('../tools/catalog-preview.cjs');
+const {review:reviewCatalog, publicFiles, root:repoRoot, hash} = require('../tools/candidate-plan.cjs');
+const {prepareCandidates:prepare, writeCandidates} = require('../tools/generate-candidates.cjs');
+const {readMenu, synchronizeMenu} = require('../tools/generate-menu-html.cjs');
+const {synchronizeSite} = require('../tools/business-html.cjs');
+const {loadBusiness} = require('../tools/site-business-adapter.cjs');
 const {loadConfig} = require('../tools/sync-seo.cjs');
 const {apply, restore, listBackups, readBackupLog} = require('../tools/menu-transaction.cjs');
 const {backupDirectory} = require('../tools/studio-project.cjs');
@@ -15,6 +18,33 @@ const {runStudio} = require('../tools/studio-session.cjs');
 const {createOperations} = require('../tools/studio.cjs');
 
 const base = loadBaseline();
+let root;
+let fixtureBusiness;
+const preview = (input, baseline = base, business = fixtureBusiness) => previewCatalog(input, baseline, business, root);
+const review = (input, site = root) => reviewCatalog(input, site);
+const prepareCandidates = (input, report, site = root, options) => prepare(input, report, site, options);
+const templateRows = baseline => rowsFor(baseline, fixtureBusiness);
+
+test.before(async () => {
+  root = await fs.mkdtemp(path.join(await fs.realpath(os.tmpdir()), 'mireka-informativo-'));
+  const original = execFileSync('git', ['-c', `safe.directory=${repoRoot.replaceAll('\\','/')}`, 'show',
+    'c33763c828a3f23b4d494abe28ab331f86e510bd:js/config.js'], {cwd:repoRoot});
+  await fs.mkdir(path.join(root, 'js'));
+  await fs.writeFile(path.join(root, 'js/config.js'), original);
+  await fs.writeFile(path.join(root, 'js/menu-data.js'), base.source);
+  await fs.cp(path.join(repoRoot, 'assets/images/products'), path.join(root, 'assets/images/products'), {recursive:true});
+  fixtureBusiness = loadBusiness(root);
+  const config = fixtureBusiness.config;
+  const html = await fs.readFile(path.join(repoRoot, 'index.html'), 'utf8');
+  await fs.writeFile(path.join(root, 'index.html'), synchronizeSite(synchronizeMenu(html,
+    readMenu(base.source.toString()), config.images.productPlaceholder, config.order), config));
+});
+
+test.after(async () => {
+  const resolved = await fs.realpath(root);
+  assert.match(path.relative(await fs.realpath(os.tmpdir()), resolved), /^mireka-informativo-[a-z0-9]+$/i);
+  await fs.rm(resolved, {recursive:true, force:true});
+});
 function workbook(edit = () => {}) {
   const rows = templateRows(base);
   edit(rows);
@@ -190,7 +220,7 @@ test('WhatsApp SI solo genera una solicitud y los libros previos siguen consulta
   const old = await preview(workbook(rows => { delete rows.DATOS_NEGOCIO; }));
   assert.deepEqual(old.errores, []);
   assert.match(old.advertencias.join(), /Sin hoja DATOS_NEGOCIO/);
-  const config = await fs.readFile(path.join(__dirname, '../js/config.js'), 'utf8');
+  const config = await fs.readFile(path.join(root, 'js/config.js'), 'utf8');
   assert.match(config, /whatsapp:.*enabled: false/);
   assert.match(config, /pricesApproved: false/);
 });
@@ -376,9 +406,9 @@ async function studioScript(options, answers) {
   await runStudio({
     config:{name:'Studio de prueba', version:'1.0.0', client:'Cliente de prueba', excelDirectory:path.dirname(options.excel)},
     operations,
-    ask:async () => {
+    ask:async message => {
       const answer = steps.next().value;
-      return typeof answer === 'function' ? answer() : answer;
+      return typeof answer === 'function' ? answer(message) : answer;
     },
     write:message => output.push(message)
   });
@@ -407,7 +437,7 @@ test('Studio permite navegar, seleccionar y revisar Excel válido o bloqueado', 
 
 test('Studio cancela, rechaza un plan obsoleto durante aprobación y aplica y restaura en copia aislada', async t => {
   const {options, originals, prepared} = await transactionFixture(t);
-  const publicOriginals = await Promise.all(publicFiles.map(file => fs.readFile(path.join(root, file))));
+  const publicOriginals = await Promise.all(publicFiles.map(file => fs.readFile(path.join(repoRoot, file))));
   const first = await studioScript(options, ['1', options.excel, '2', '3', 'DATOS_NEGOCIO', '', 'horario', '4', '5', 'NO', '0']);
   assert.match(first, /DATOS_NEGOCIO .*horario.*Horario de prueba/);
   assert.match(first, /Solicitudes o propuestas pendientes de verificación \(2\)/);
@@ -423,6 +453,7 @@ test('Studio cancela, rechaza un plan obsoleto durante aprobación y aplica y re
   await fs.writeFile(options.excel, originalExcel);
   const applied = await studioScript(options, ['1', options.excel, '2', '4', '5', 'APLICAR', '6', '1', 'DETALLES', '7', '1', 'NO', '0']);
   assert.match(applied, /Aplicación verificada\. Respaldo: respaldo-/);
+  assert.match(applied, /Aplicación de contenido completada.*No se aplicaron solicitudes de activación/);
   assert.match(applied, /Manifiesto: .*ARCHIVOS_PARA_PUBLICAR\.txt/);
   assert.match(applied, /respaldo-.*\| .*Z \| aplicado/);
   assert.match(applied, /Fecha UTC: .* · Estado: aplicado/);
@@ -436,7 +467,7 @@ test('Studio cancela, rechaza un plan obsoleto durante aprobación y aplica y re
   assert.match(restored, /respaldo-.*\| .*Z \| restaurado/);
   for (const [index, file] of publicFiles.entries()) {
     assert.deepEqual(await fs.readFile(path.join(options.siteRoot, file)), originals[file]);
-    assert.deepEqual(await fs.readFile(path.join(root, file)), publicOriginals[index]);
+    assert.deepEqual(await fs.readFile(path.join(repoRoot, file)), publicOriginals[index]);
   }
 });
 
@@ -498,12 +529,30 @@ test('normaliza las tres redes y exige un plan nuevo al cambiar de cuenta', asyn
   assert.equal(invalid.negocio.errores.length, 3);
 });
 
-test('bloquea estados comerciales inválidos, precios provisionales y destinatarios incorrectos', async () => {
-  const provisional = workbook(rows => editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI'}));
-  const {report} = await review(provisional);
-  assert.equal(report.comercial.preciosInvalidos.length, 101);
-  await assert.rejects(prepareCandidates(provisional, report, root, {commercial:true}), /sin precio autorizable/);
-  assert.equal(loadConfig(root, (await prepareCandidates(provisional, report)).files['js/config.js']).order.pricesApproved, false);
+test('el catálogo de un peso necesita autorización y los precios inválidos bloquean la activación', async () => {
+  const requested = workbook(rows => editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI'}));
+  const {report} = await review(requested);
+  assert.equal(report.comercial.objetivo.productos.length, 101);
+  assert.ok(report.comercial.objetivo.productos.every(product => product.precio === 1));
+  assert.deepEqual(report.comercial.preciosInvalidos, []);
+  const normal = await prepareCandidates(requested, report);
+  const config = loadConfig(root, normal.files['js/config.js']);
+  assert.equal(config.order.pricesApproved, false);
+  assert.equal(config.whatsapp.enabled, false);
+  assert.doesNotMatch(normal.files['index.html'], /class="price">\$/);
+  const commercial = await prepareCandidates(requested, report, root, {commercial:true});
+  assert.match(commercial.report.comercial.huella, /^[a-f0-9]{64}$/);
+  assert.equal((commercial.files['index.html'].match(/class="price">\$1\.00<\/p>/g) || []).length, 101);
+  for (const price of [0, -1, null, '1,00', 1.001]) {
+    const input = workbook(rows => {
+      rows.MENU[1][3] = price;
+      editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI'});
+    });
+    const invalidPrice = (await review(input)).report;
+    assert.ok(invalidPrice.comercial.preciosInvalidos.some(item => item.id === base.products[0].id), String(price));
+    await assert.rejects(prepareCandidates(input, invalidPrice, root, {commercial:true}),
+      /sin precio autorizable|vista previa debe ser válida/);
+  }
   const invalid = workbook(rows => editBusiness(rows, {mostrar_precios:'NO', whatsapp_activo:'SI'}));
   const invalidReport = (await review(invalid)).report;
   await assert.rejects(prepareCandidates(invalid, invalidReport, root, {commercial:true}), /requiere mostrar_precios=SI/);
@@ -539,8 +588,8 @@ test('autoriza modos, protege cambios activos y restaura el estado comercial en 
     return {input, report, prepared, args:{...options, directory, approval:candidate.aprobacionSha256}};
   }
   const authorize = async ({frase}) => frase;
-  const pricesOnly = await commercialFixture('SI', 'NO', 25.75);
-  assert.match(pricesOnly.prepared.files['index.html'], /class="price">\$25\.75/);
+  const pricesOnly = await commercialFixture('SI', 'NO', 1);
+  assert.match(pricesOnly.prepared.files['index.html'], /class="price">\$1\.00/);
   await assert.rejects(apply(pricesOnly.args), /Falta autorización comercial/);
   let oldPhrase;
   await assert.rejects(apply({...pricesOnly.args, authorize:async ({frase}) => {
@@ -551,7 +600,7 @@ test('autoriza modos, protege cambios activos y restaura el estado comercial en 
   const first = await apply({...pricesOnly.args, authorize});
   assert.equal(loadConfig(siteRoot).order.pricesApproved, true);
   assert.equal(loadConfig(siteRoot).whatsapp.enabled, false);
-  const orders = await commercialFixture('SI', 'SI', 25.75);
+  const orders = await commercialFixture('SI', 'SI', 1);
   await apply({...orders.args, authorize});
   assert.equal(loadConfig(siteRoot).whatsapp.enabled, true);
   const repriced = await commercialFixture('SI', 'SI', 31.50, '15550000124');
@@ -579,4 +628,49 @@ test('autoriza modos, protege cambios activos y restaura el estado comercial en 
   await restore({...options, id:second.id, authorize});
   await restore({...options, id:path.basename(first)});
   for (const file of publicFiles) assert.deepEqual(await fs.readFile(path.join(siteRoot, file)), originals[file]);
+});
+
+test('Studio conserva el candidato comercial y exige 8 → 5 → APLICAR → AUTORIZAR', async t => {
+  const {options} = await transactionFixture(t);
+  const configPath = path.join(options.siteRoot, 'js/config.js');
+  const original = await fs.readFile(configPath, 'utf8');
+  await fs.appendFile(configPath, '\n// Cambios comerciales propuestos desde Excel.\nsiteConfig.whatsapp.number = "5512345678";\n');
+  const local = workbook(rows => editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI', whatsapp:'5512345678'}));
+  await fs.writeFile(options.excel, local);
+  const blocked = await studioScript(options, ['1', options.excel, '2', '8', '5', '0']);
+  assert.match(blocked, /destinatario WhatsApp internacional es inválido/);
+  assert.match(blocked, /Primero genera los candidatos/);
+
+  const input = workbook(rows => editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI', whatsapp:'525512345678'}));
+  await fs.writeFile(options.excel, input);
+  const cancelled = await studioScript(options, ['1', options.excel, '2', '8', '4', 'NO', '5', 'APLICAR', 'NO', '0']);
+  assert.match(cancelled, /Se conserva el candidato comercial/);
+  assert.match(cancelled, /Autorización comercial incorrecta o cancelada/);
+  assert.equal(loadConfig(options.siteRoot).whatsapp.enabled, false);
+  assert.match(await fs.readFile(configPath, 'utf8'), /siteConfig\.whatsapp\.number = "5512345678"/);
+
+  let phraseRequested = false;
+  const applied = await studioScript(options, ['1', options.excel, '2', '8', '5', 'APLICAR', message => {
+    const phrase = /AUTORIZAR [a-f0-9]+-[a-f0-9]+/.exec(message)?.[0];
+    assert.ok(phrase);
+    phraseRequested = true;
+    return phrase;
+  }, '0']);
+  assert.equal(phraseRequested, true);
+  assert.match(applied, /Aplicación seleccionada: comercial/);
+  assert.match(applied, /Estado efectivo: precios SI, WhatsApp SI/);
+  const config = loadConfig(options.siteRoot);
+  assert.equal(config.order.pricesApproved, true);
+  assert.equal(config.whatsapp.enabled, true);
+  assert.equal(config.whatsapp.number, '525512345678');
+  const source = await fs.readFile(configPath, 'utf8');
+  assert.doesNotMatch(source, /siteConfig\.whatsapp\.(?:number|enabled)\s*=/);
+  assert.match(source, /whatsapp: \{ number: "525512345678", enabled: true \}/);
+  const backup = (await listBackups(options)).find(item => item.estado === 'aplicado');
+  const log = await readBackupLog({...options, id:backup.id});
+  assert.match(log, /"autorizacionComercialAplicada": true/);
+  assert.match(log, /"estadoFinal": \{\s*"mostrarPrecios": true,\s*"whatsappActivo": true,\s*"destinatario": "525512345678"/);
+  assert.match(log, /"solicitudesPendientes": \[\]/);
+  await restore({...options, id:backup.id});
+  assert.ok((await fs.readFile(configPath, 'utf8')).startsWith(original));
 });
