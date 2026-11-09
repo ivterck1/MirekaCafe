@@ -1052,10 +1052,8 @@ function applySiteConfig() {
     const value = element.dataset.config.split(".").reduce((value, key) => value?.[key], siteConfig);
     element.textContent = value ?? "";
   });
-  document.title = `${siteConfig.business.name} | ${siteConfig.business.description}`;
-  document.querySelector('meta[name="description"]').content = siteConfig.business.description;
-  document.querySelector('meta[property="og:title"]').content = document.title;
-  document.querySelector('meta[property="og:description"]').content = siteConfig.business.description;
+  // Los metadatos se generan antes del despliegue con npm run seo:sync.
+  // Conservar el HTML inicial evita depender de JS o deshacer los textos SEO.
   document.querySelectorAll('.brand img, .footer-content img').forEach((image) => {
     image.src = siteConfig.images.logo;
     image.alt = siteConfig.business.name;

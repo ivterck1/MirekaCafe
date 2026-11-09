@@ -5,6 +5,14 @@ const siteConfig = {
     shortName: "Mireka",
     description: "Cafetería de Autor"
   },
+  // Fuente editorial del HTML inicial. Ejecutar npm run seo:sync al editar.
+  seo: {
+    title: "Mireka Café | Cafetería de autor y menú",
+    description: "Conoce el menú de Mireka Café: café, bebidas, crepas y antojos. Consulta nuestras opciones de servicio y disfruta a tu manera.",
+    robots: "noindex,follow",
+    locale: "es_MX",
+    canonicalUrl: ""
+  },
   whatsapp: { number: "525562524763", enabled: false },
   hero: {
     eyebrow: "Mireka Café · Cafetería de Autor",

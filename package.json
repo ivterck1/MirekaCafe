@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "seo": "npm run seo:check",
+    "seo:check": "node tools/sync-seo.cjs --check",
+    "seo:sync": "node tools/sync-seo.cjs --write",
     "menu:generate": "node tools/import-menu.cjs",
     "menu:write": "node tools/import-menu.cjs --write",
-    "test": "node --test tests/import-menu.test.cjs tests/featured.test.cjs",
+    "test": "node tools/sync-seo.cjs --check && node --test tests/import-menu.test.cjs tests/featured.test.cjs tests/seo.test.cjs",
     "test:site": "node --test tests/product-images.test.cjs tests/navigation.test.cjs tests/visual-assets.test.cjs tests/mobile-order-bar.test.cjs tests/accessibility.test.cjs && node tests/smoke.cjs"
   },
   "devDependencies": {

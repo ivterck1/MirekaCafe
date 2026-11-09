@@ -53,7 +53,7 @@ async function checkSite(browser, width) {
     });
 
     await page.goto(siteUrl);
-    assert.equal(await page.title(), 'Mireka Café | Cafetería de Autor');
+    assert.equal(await page.title(), 'Mireka Café | Cafetería de autor y menú');
     assert.equal(await page.locator('meta[property="og:title"]').getAttribute('content'), await page.title());
     assert.equal(await page.evaluate(() => menuItems.length), 101);
     const categories = page.locator('[data-category]');
