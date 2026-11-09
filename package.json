@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "studio": "node tools/studio.cjs",
     "seo": "npm run seo:check",
     "seo:check": "node tools/sync-seo.cjs --check",
     "seo:sync": "node tools/sync-seo.cjs --write",

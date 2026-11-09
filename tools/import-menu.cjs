@@ -150,9 +150,10 @@ async function generate(input = path.join(ROOT, 'templates/menu-cliente.xlsx'), 
   return {output, warnings, items};
 }
 
-function catalogItems(products) {
+function catalogItems(products, categoryIds = {}) {
   return products.map(p => ({id:p.id, nombre:p.nombre, descripcion:p.descripcion, precio:p.precio,
-    categoria:p.categoria, imagen:`assets/images/products/${p.imagen}`, disponible:p.disponible, destacado:p.destacado}));
+    categoria:p.categoria, imagen:`assets/images/products/${p.imagen}`, disponible:p.disponible, destacado:p.destacado,
+    ...(p.categoria_id && categoryIds[p.categoria] !== p.categoria_id ? {categoria_id:p.categoria_id} : {})}));
 }
 
 function serializeCatalog(items) {

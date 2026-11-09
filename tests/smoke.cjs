@@ -204,6 +204,10 @@ async function checkSite(browser, width, siteUrl) {
     assert.deepEqual(await page.evaluate(() => window.testOrderUrls), []);
 
     await address.fill('Calle de prueba 123');
+    await page.evaluate(() => { cartItems[0].price = 1; handleWhatsAppClick(); });
+    assert.match(await page.locator('#order-message').innerText(), /precio/);
+    assert.deepEqual(await page.evaluate(() => window.testOrderUrls), []);
+    await page.evaluate(() => { cartItems[0].price = 65; });
     await send.click();
     const [deliveryUrl] = await page.evaluate(() => window.testOrderUrls);
     const delivery = new URL(deliveryUrl);
@@ -212,6 +216,7 @@ async function checkSite(browser, width, siteUrl) {
     assert.match(deliveryMessage, /Mireka Café[\s\S]*Ana Prueba/);
     assert.match(deliveryMessage, /Entrega: Servicio a domicilio/);
     assert.match(deliveryMessage, /Dirección: Calle de prueba 123/);
+    assert.match(deliveryMessage, /1 x .*\(\$65\.00 c\/u\) = \$65\.00[\s\S]*Total: \$65\.00/);
 
     await page.locator('[value="recoger"]').check();
     assert.equal(await address.isVisible(), false);

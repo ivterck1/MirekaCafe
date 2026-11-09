@@ -2,18 +2,19 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const {createHash} = require('node:crypto');
 const {execFileSync} = require('node:child_process');
-const {isDeepStrictEqual} = require('node:util');
 const {analyze, loadBaseline} = require('./catalog-preview.cjs');
 const {loadBusiness} = require('./site-business-adapter.cjs');
-const {readMenu} = require('./generate-menu-html.cjs');
 const {catalogItems} = require('./import-menu.cjs');
+const {commercialPreview} = require('./commercial-plan.cjs');
+const categoryIds = require('./catalog-category-ids.json');
 
 const root = path.resolve(__dirname, '..');
 const publicFiles = ['index.html', 'js/menu-data.js', 'js/config.js'];
 const tools = [
-  'package-lock.json', 'tools/business-html.cjs', 'tools/business-preview.cjs', 'tools/candidate-plan.cjs', 'tools/menu-transaction.cjs',
-  'tools/catalog-category-ids.json', 'tools/catalog-preview.cjs', 'tools/generate-candidates.cjs',
-  'tools/generate-menu-html.cjs', 'tools/import-menu.cjs', 'tools/site-business-adapter.cjs', 'tools/sync-seo.cjs'
+  'package-lock.json', 'js/app.js', 'tools/business-html.cjs', 'tools/business-preview.cjs', 'tools/candidate-plan.cjs', 'tools/menu-transaction.cjs',
+  'tools/catalog-category-ids.json', 'tools/catalog-preview.cjs', 'tools/commercial-plan.cjs', 'tools/generate-candidates.cjs',
+  'tools/generate-menu-html.cjs', 'tools/import-menu.cjs', 'tools/site-business-adapter.cjs', 'tools/studio-project.cjs',
+  'tools/sync-seo.cjs'
 ];
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 
@@ -26,11 +27,9 @@ async function review(source, siteRoot = root) {
   const checkout = currentCheckout();
   const originals = Object.fromEntries(await Promise.all(publicFiles.map(async file => [file, await fs.readFile(path.join(siteRoot, file))])));
   const business = loadBusiness(siteRoot, originals['js/config.js']);
-  const base = loadBaseline();
+  const base = loadBaseline(originals['js/menu-data.js']);
   const {report, items} = await analyze(source, base, business, siteRoot);
-  if (!isDeepStrictEqual(readMenu(originals['js/menu-data.js'].toString('utf8')), catalogItems(base.products))) {
-    report.errores.push('El catálogo actual difiere de la revisión base aprobada.');
-  }
+  if (report.negocio) report.comercial = commercialPreview(items, catalogItems(base.products, categoryIds), business.config, report);
   const images = new Set([
     ...base.products.map(product => `assets/images/products/${product.imagen}`),
     ...items.map(item => item.imagen).filter(file => /^assets\/images\/products\/[a-z0-9][a-z0-9_-]*\.(?:webp|png|jpe?g|svg)$/.test(file))

@@ -376,7 +376,7 @@ function removeCartItem(productId) {
 
 // Suma los subtotales de cada producto del carrito.
 function calculateCartSubtotal() {
-  return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  return cartItems.reduce((total, item) => total + Math.round(item.price * 100) * item.quantity, 0) / 100;
 }
 
 // Revisa que el carrito tenga productos existentes, disponibles y cantidades validas.
@@ -400,10 +400,15 @@ function validateCartForOrder() {
       errors.push(`La cantidad de "${item.name}" no es válida.`);
     }
 
-    if (!Number.isFinite(item.price) || item.price < 0) {
+    if (!Number.isFinite(item.price) || item.price <= 0 || item.price === 1 ||
+        Math.round(item.price * 100) / 100 !== item.price ||
+        item.price !== product.precio || item.name !== product.nombre) {
       errors.push(`El precio de "${item.name}" no es válido.`);
     }
   });
+  if (!Number.isSafeInteger(Math.round(calculateCartSubtotal() * 100))) {
+    errors.push("El total del pedido excede el importe permitido.");
+  }
 
   return errors;
 }
@@ -451,7 +456,7 @@ function isWhatsAppConfigured() {
 // Construye las lineas de productos que iran en el mensaje de WhatsApp.
 function buildProductMessageLines() {
   return cartItems.map((item) => {
-    const itemSubtotal = item.price * item.quantity;
+    const itemSubtotal = Math.round(item.price * 100) * item.quantity / 100;
 
     return `- ${item.quantity} x ${item.name} (${formatPrice(item.price)} c/u) = ${formatPrice(itemSubtotal)}`;
   });

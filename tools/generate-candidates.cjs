@@ -8,6 +8,7 @@ const {serializeCatalog} = require('./import-menu.cjs');
 const {prepareBusiness} = require('./site-business-adapter.cjs');
 const {synchronizeSite} = require('./business-html.cjs');
 const {loadConfig} = require('./sync-seo.cjs');
+const {selectCommercial} = require('./commercial-plan.cjs');
 
 function bumpScript(html, file) {
   const key = file.replaceAll('.', '\\.');
@@ -16,7 +17,7 @@ function bumpScript(html, file) {
   return html.replace(pattern, (_, prefix, patch, suffix) => prefix + (Number(patch) + 1) + suffix);
 }
 
-async function prepareCandidates(excel, approvedPreview, siteRoot = root) {
+async function prepareCandidates(excel, approvedPreview, siteRoot = root, {commercial = false} = {}) {
   const {report, items, business, originals} = await review(excel, siteRoot);
   if (!isDeepStrictEqual(approvedPreview, report)) throw new Error('Vista previa obsoleta o modificada. Genera una nueva.');
   if (report.errores.length || !report.negocio || report.modo !== 'ids-persistentes') {
@@ -25,17 +26,19 @@ async function prepareCandidates(excel, approvedPreview, siteRoot = root) {
   if (report.cambios.some(change => ['alta propuesta', 'baja propuesta'].includes(change.tipo))) {
     throw new Error('El plan incluye altas o bajas pendientes de autorización.');
   }
-  const {candidate:config, impacts} = prepareBusiness(siteRoot, business, report);
+  const commercialPlan = selectCommercial(report, commercial);
+  const {candidate:config, impacts} = prepareBusiness(siteRoot, business, report, commercialPlan);
+  const siteConfig = loadConfig(siteRoot, config);
   const originalMenu = originals['js/menu-data.js'].toString('utf8');
   const nextMenu = isDeepStrictEqual(readMenu(originalMenu), items) ? originalMenu : serializeCatalog(items);
-  let html = synchronizeMenu(originals['index.html'].toString('utf8'), items, business.config.images.productPlaceholder);
-  html = synchronizeSite(html, loadConfig(siteRoot, config));
+  let html = synchronizeMenu(originals['index.html'].toString('utf8'), items, siteConfig.images.productPlaceholder, siteConfig.order);
+  html = synchronizeSite(html, siteConfig);
   if (nextMenu !== originalMenu) html = bumpScript(html, 'js/menu-data.js');
   if (config !== originals['js/config.js'].toString('utf8')) html = bumpScript(html, 'js/config.js');
   return {
     originals, files:{'index.html':html, 'js/menu-data.js':nextMenu, 'js/config.js':config},
     report:{revisionBase:report.revisionBase, vistaPreviaSha256:hash(JSON.stringify(report)),
-      impactosComerciales:impacts, cambiosPropuestos:report.cambios,
+      impactosComerciales:impacts, cambiosPropuestos:report.cambios, comercial:commercialPlan,
       estado:'candidatos privados para revisión',
       privados:['vista previa', 'reporte-diferencias.json', 'diferencias.patch', 'Excel y herramientas']}
   };
@@ -102,11 +105,11 @@ function candidateReport(prepared, patch, files = publicFiles.map(ruta => {
 }
 
 async function main() {
-  const [excel, plan, ...rest] = process.argv.slice(2);
-  if (!excel || !plan || rest.length || path.extname(excel).toLowerCase() !== '.xlsx' || path.extname(plan).toLowerCase() !== '.json') {
-    throw new Error('Uso: npm run menu:candidates -- archivo.xlsx vista-previa.json');
+  const [excel, plan, mode, ...rest] = process.argv.slice(2);
+  if (!excel || !plan || (mode !== undefined && mode !== '--commercial') || rest.length || path.extname(excel).toLowerCase() !== '.xlsx' || path.extname(plan).toLowerCase() !== '.json') {
+    throw new Error('Uso: npm run menu:candidates -- archivo.xlsx vista-previa.json [--commercial]');
   }
-  const prepared = await prepareCandidates(await fs.readFile(excel), JSON.parse(await fs.readFile(plan, 'utf8')));
+  const prepared = await prepareCandidates(await fs.readFile(excel), JSON.parse(await fs.readFile(plan, 'utf8')), root, {commercial:mode === '--commercial'});
   console.log(await writeCandidates(prepared));
 }
 

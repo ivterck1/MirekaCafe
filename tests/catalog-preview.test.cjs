@@ -5,11 +5,14 @@ const path = require('node:path');
 const os = require('node:os');
 const XLSX = require('xlsx');
 const {loadBaseline, preview, templateRows} = require('../tools/catalog-preview.cjs');
-const {review, publicFiles, root} = require('../tools/candidate-plan.cjs');
+const {review, publicFiles, root, hash} = require('../tools/candidate-plan.cjs');
 const {prepareCandidates, writeCandidates} = require('../tools/generate-candidates.cjs');
 const {readMenu} = require('../tools/generate-menu-html.cjs');
 const {loadConfig} = require('../tools/sync-seo.cjs');
-const {apply, restore} = require('../tools/menu-transaction.cjs');
+const {apply, restore, listBackups, readBackupLog} = require('../tools/menu-transaction.cjs');
+const {backupDirectory} = require('../tools/studio-project.cjs');
+const {runStudio} = require('../tools/studio-session.cjs');
+const {createOperations} = require('../tools/studio.cjs');
 
 const base = loadBaseline();
 function workbook(edit = () => {}) {
@@ -136,11 +139,12 @@ test('prevé horario, teléfono, dirección y redes sin cambiar la configuració
     tiktok:'https://www.tiktok.com/@perfil_prueba'
   })));
   assert.deepEqual(report.errores, []);
-  assert.deepEqual(report.cambios.map(change => change.campo), ['telefono', 'horario', 'direccion', 'instagram', 'tiktok']);
+  assert.deepEqual(report.cambios.map(change => change.campo), ['telefono', 'horario', 'direccion', 'instagram', 'facebook', 'tiktok']);
   assert.equal(report.cambios[0].nuevo, '001234567890');
   assert.equal(report.cambios[0].fila, 5);
-  assert.equal(report.negocio.solicitudes[0].tipo, 'usuario pendiente');
-  assert.equal(report.negocio.solicitudes[0].nuevo, '@perfil_prueba');
+  assert.deepEqual(report.negocio.solicitudes, []);
+  assert.equal(report.cambios.find(change => change.campo === 'facebook').nuevo, 'https://www.facebook.com/perfil_prueba');
+  assert.match(report.advertencias.join(), /Enlace construido.*No se comprobó la existencia/);
   assert.deepEqual(await fs.readFile(config), original);
 });
 
@@ -215,7 +219,7 @@ test('genera JS, HTML y configuración coordinados y deterministas sin aplicar s
   assert.match(prepared.files['index.html'], /Americano &lt;de prueba&gt;/);
   const config = loadConfig(root, prepared.files['js/config.js']);
   assert.equal(config.contact.hours, 'Horario "candidato"');
-  assert.equal(config.contact.instagram, '');
+  assert.equal(config.contact.instagram, 'https://www.instagram.com/perfil-prueba/');
   assert.equal(config.whatsapp.enabled, false);
   assert.equal(config.order.pricesApproved, false);
   assert.deepEqual(prepared.report.impactosComerciales.find(item => item.campo === 'horario').superficies, ['contacto', 'footer']);
@@ -277,13 +281,11 @@ async function transactionFixture(t) {
   const privateRoot = path.join(resolved, 'privado');
   await fs.mkdir(path.join(siteRoot, 'js'), {recursive:true});
   for (const file of publicFiles) await fs.copyFile(path.join(root, file), path.join(siteRoot, file));
-  await fs.appendFile(path.join(siteRoot, 'js/config.js'),
-    '\nsiteConfig.contact.verifiedSocial = {tiktok: "https://www.tiktok.com/@perfil_prueba"};\n');
   await fs.cp(path.join(root, 'assets/images/products'), path.join(siteRoot, 'assets/images/products'), {recursive:true});
   const input = workbook(rows => {
     rows.MENU[1][1] = 'Americano de prueba';
     editBusiness(rows, {horario:'Horario de prueba', descripcion:'Descripción de prueba & café',
-      telefono:'+525500000001', tiktok:'https://www.tiktok.com/@perfil_prueba', mostrar_precios:'SI', whatsapp_activo:'SI'});
+      telefono:'+525500000001', tiktok:'@perfil_prueba', mostrar_precios:'SI', whatsapp_activo:'SI'});
   });
   const {report, originals} = await review(input, siteRoot);
   const prepared = await prepareCandidates(input, report, siteRoot);
@@ -365,4 +367,216 @@ test('recupera una escritura parcial y bloquea ejecución simultánea', async t 
   const id = (await fs.readdir(options.privateRoot)).find(name => name.startsWith('respaldo-'));
   await restore({...options, id, recover:true});
   for (const file of publicFiles) assert.deepEqual(await fs.readFile(path.join(options.siteRoot, file)), originals[file]);
+});
+
+async function studioScript(options, answers) {
+  const operations = createOperations(options);
+  const output = [];
+  const steps = answers[Symbol.iterator]();
+  await runStudio({
+    config:{name:'Studio de prueba', version:'1.0.0', client:'Cliente de prueba', excelDirectory:path.dirname(options.excel)},
+    operations,
+    ask:async () => {
+      const answer = steps.next().value;
+      return typeof answer === 'function' ? answer() : answer;
+    },
+    write:message => output.push(message)
+  });
+  return output.join('\n');
+}
+
+test('Studio permite navegar, seleccionar y revisar Excel válido o bloqueado', async t => {
+  const {options} = await transactionFixture(t);
+  const blank = path.join(path.dirname(options.excel), 'sin-cambios.xlsx');
+  const invalid = path.join(path.dirname(options.excel), 'bloqueado.xlsx');
+  await fs.writeFile(blank, workbook());
+  await fs.writeFile(invalid, workbook(rows => { rows.MENU[1][8] = 'id-desconocido'; }));
+  const text = await studioScript(options, [
+    'x', '4', '1', path.join(path.dirname(blank), 'inexistente.xlsx'), '2',
+    '1', blank, '2', '3', 'MENU', '', '', '4', '5',
+    '1', invalid, '2', '4', '6', '0'
+  ]);
+  for (const expected of [/Cliente de prueba/, /Opción inválida/, /Primero crea la vista previa/, /ENOENT/,
+    /Primero selecciona/, /Altas: 0.*Bajas: 0.*Modificaciones: 0/, /Cambios de contenido \(0\)/,
+    /Archivos modificados: ninguno/, /no contiene archivos modificados/, /ID "id-desconocido" desconocido/,
+    /vista previa debe ser válida/, /No hay respaldos disponibles/]) assert.match(text, expected);
+  const selectedOnly = await studioScript(options, ['1', '1', '0']);
+  assert.match(selectedOnly, /Excel seleccionado: .*bloqueado.xlsx/);
+  assert.doesNotMatch(selectedOnly, /vista-previa-.*\.json|Candidatos:/);
+});
+
+test('Studio cancela, rechaza un plan obsoleto durante aprobación y aplica y restaura en copia aislada', async t => {
+  const {options, originals, prepared} = await transactionFixture(t);
+  const publicOriginals = await Promise.all(publicFiles.map(file => fs.readFile(path.join(root, file))));
+  const first = await studioScript(options, ['1', options.excel, '2', '3', 'DATOS_NEGOCIO', '', 'horario', '4', '5', 'NO', '0']);
+  assert.match(first, /DATOS_NEGOCIO .*horario.*Horario de prueba/);
+  assert.match(first, /Solicitudes o propuestas pendientes de verificación \(2\)/);
+  assert.match(first, /Aplicación cancelada/);
+  assert.doesNotMatch(first, /Aplicación verificada/);
+  const originalExcel = await fs.readFile(options.excel);
+  const stale = await studioScript(options, ['1', options.excel, '2', '4', '5', async () => {
+    await fs.appendFile(options.excel, 'Cambio después de confirmar el conjunto');
+    return 'APLICAR';
+  }, '0']);
+  assert.match(stale, /vista previa obsoleta/i);
+  for (const file of publicFiles) assert.deepEqual(await fs.readFile(path.join(options.siteRoot, file)), originals[file]);
+  await fs.writeFile(options.excel, originalExcel);
+  const applied = await studioScript(options, ['1', options.excel, '2', '4', '5', 'APLICAR', '6', '1', 'DETALLES', '7', '1', 'NO', '0']);
+  assert.match(applied, /Aplicación verificada\. Respaldo: respaldo-/);
+  assert.match(applied, /Manifiesto: .*ARCHIVOS_PARA_PUBLICAR\.txt/);
+  assert.match(applied, /respaldo-.*\| .*Z \| aplicado/);
+  assert.match(applied, /Fecha UTC: .* · Estado: aplicado/);
+  assert.match(applied, /Archivos: index\.html, js\/menu-data\.js, js\/config\.js/);
+  assert.match(applied, /"excelSha256"/);
+  assert.match(applied, /Restauración cancelada/);
+  for (const file of publicFiles) assert.equal(await fs.readFile(path.join(options.siteRoot, file), 'utf8'), prepared.files[file]);
+  const restored = await studioScript(options, ['7', '1', 'RESTAURAR', '6', '1', '', '0']);
+  assert.match(restored, /reemplazará los archivos actuales/);
+  assert.match(restored, /Restauración verificada/);
+  assert.match(restored, /respaldo-.*\| .*Z \| restaurado/);
+  for (const [index, file] of publicFiles.entries()) {
+    assert.deepEqual(await fs.readFile(path.join(options.siteRoot, file)), originals[file]);
+    assert.deepEqual(await fs.readFile(path.join(root, file)), publicOriginals[index]);
+  }
+});
+
+test('restaura un respaldo TEMP anterior desde la configuración persistente', async t => {
+  const {options, originals} = await transactionFixture(t);
+  const site = await fs.realpath(options.siteRoot);
+  const temp = await fs.realpath(os.tmpdir());
+  const legacy = path.join(temp, `mireka-menu-${hash(site.toLowerCase()).slice(0, 16)}`);
+  t.after(async () => {
+    const resolved = await fs.realpath(legacy);
+    assert.match(path.relative(temp, resolved), /^mireka-menu-[a-f0-9]{16}$/);
+    await fs.rm(resolved, {recursive:true, force:true});
+  });
+  const folder = await apply({...options, privateRoot:legacy});
+  const metaPath = path.join(folder, 'respaldo.json');
+  const meta = JSON.parse(await fs.readFile(metaPath));
+  delete meta.proyecto;
+  await fs.writeFile(metaPath, JSON.stringify(meta));
+  const id = path.basename(folder);
+  assert.equal((await listBackups(options)).find(backup => backup.id === id).ruta, folder);
+  assert.match(await readBackupLog({...options, id}), /Aplicación verificada/);
+  await assert.rejects(restore({...options, id:folder}), /sin ruta/);
+  await restore({...options, id});
+  for (const file of publicFiles) assert.deepEqual(await fs.readFile(path.join(site, file)), originals[file]);
+});
+
+test('usa la carpeta configurada del cliente y bloquea un respaldo alterado', async t => {
+  const {options} = await transactionFixture(t);
+  const previous = process.env.STUDIO_BACKUPS_DIR;
+  process.env.STUDIO_BACKUPS_DIR = options.privateRoot;
+  try {
+    const scope = {...options, privateRoot:undefined};
+    const folder = await apply(scope);
+    assert.equal(path.dirname(folder), backupDirectory(root));
+    const id = path.basename(folder);
+    assert.equal((await listBackups(scope))[0].estado, 'aplicado');
+    await fs.appendFile(path.join(folder, 'original/index.html'), 'alteración de prueba');
+    await assert.rejects(restore({...scope, id}), /Respaldo alterado/);
+  } finally {
+    if (previous === undefined) delete process.env.STUDIO_BACKUPS_DIR;
+    else process.env.STUDIO_BACKUPS_DIR = previous;
+  }
+});
+
+test('normaliza las tres redes y exige un plan nuevo al cambiar de cuenta', async () => {
+  const input = workbook(rows => editBusiness(rows, {instagram:'@cafe.demo', facebook:'cafedemo', tiktok:'@cafe_demo'}));
+  const {report} = await review(input);
+  const prepared = await prepareCandidates(input, report);
+  assert.deepEqual(report.cambios.map(change => change.nuevo),
+    ['https://www.instagram.com/cafe.demo', 'https://www.facebook.com/cafedemo', 'https://www.tiktok.com/@cafe_demo']);
+  assert.equal(report.negocio.advertencias.length, 3);
+  for (const change of report.cambios) assert.ok(prepared.files['index.html'].includes(`href="${change.nuevo}"`));
+  const next = workbook(rows => editBusiness(rows, {instagram:'otra_cuenta'}));
+  await assert.rejects(prepareCandidates(next, report), /obsoleta/);
+  const invalid = await preview(workbook(rows => editBusiness(rows, {
+    instagram:'javascript:alert(1)', facebook:'https://www.facebook.com/l.php?u=https://example.test',
+    tiktok:'https://www.tiktok.com/@perfil/video/123'
+  })));
+  assert.equal(invalid.negocio.errores.length, 3);
+});
+
+test('bloquea estados comerciales inválidos, precios provisionales y destinatarios incorrectos', async () => {
+  const provisional = workbook(rows => editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI'}));
+  const {report} = await review(provisional);
+  assert.equal(report.comercial.preciosInvalidos.length, 101);
+  await assert.rejects(prepareCandidates(provisional, report, root, {commercial:true}), /sin precio autorizable/);
+  assert.equal(loadConfig(root, (await prepareCandidates(provisional, report)).files['js/config.js']).order.pricesApproved, false);
+  const invalid = workbook(rows => editBusiness(rows, {mostrar_precios:'NO', whatsapp_activo:'SI'}));
+  const invalidReport = (await review(invalid)).report;
+  await assert.rejects(prepareCandidates(invalid, invalidReport, root, {commercial:true}), /requiere mostrar_precios=SI/);
+  const incomplete = workbook(rows => {
+    rows.MENU[1][3] = null;
+    editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI', whatsapp:'123'});
+  });
+  const incompleteReport = (await review(incomplete)).report;
+  assert.ok(incompleteReport.comercial.preciosInvalidos.some(item => item.id === base.products[0].id));
+  assert.match(incompleteReport.errores.join(), /WhatsApp|whatsapp/);
+  await assert.rejects(prepareCandidates(incomplete, incompleteReport, root, {commercial:true}), /vista previa debe ser válida/);
+  const noDestination = workbook(rows => {
+    rows.MENU.slice(1).forEach(row => { row[3] = 25; });
+    editBusiness(rows, {mostrar_precios:'SI', whatsapp_activo:'SI', whatsapp:'[BORRAR]'});
+  });
+  await assert.rejects(prepareCandidates(noDestination, (await review(noDestination)).report, root, {commercial:true}), /destinatario WhatsApp/);
+});
+
+test('autoriza modos, protege cambios activos y restaura el estado comercial en aislamiento', async t => {
+  const {options, originals} = await transactionFixture(t);
+  const {siteRoot} = options;
+  async function commercialFixture(prices, orders, amount, recipient = '15550000123') {
+    const input = workbook(rows => {
+      rows.MENU.slice(1).forEach(row => { row[3] = amount; });
+      editBusiness(rows, {mostrar_precios:prices, whatsapp_activo:orders, whatsapp:recipient});
+    });
+    const {report} = await review(input, siteRoot);
+    const prepared = await prepareCandidates(input, report, siteRoot, {commercial:true});
+    const directory = await writeCandidates(prepared);
+    const candidate = JSON.parse(await fs.readFile(path.join(directory, 'reporte-diferencias.json')));
+    await fs.writeFile(options.excel, input);
+    await fs.writeFile(options.plan, JSON.stringify(report));
+    return {input, report, prepared, args:{...options, directory, approval:candidate.aprobacionSha256}};
+  }
+  const authorize = async ({frase}) => frase;
+  const pricesOnly = await commercialFixture('SI', 'NO', 25.75);
+  assert.match(pricesOnly.prepared.files['index.html'], /class="price">\$25\.75/);
+  await assert.rejects(apply(pricesOnly.args), /Falta autorización comercial/);
+  let oldPhrase;
+  await assert.rejects(apply({...pricesOnly.args, authorize:async ({frase}) => {
+    oldPhrase = frase;
+    return 'APLICAR';
+  }}), /Autorización comercial incorrecta/);
+  await assert.rejects(apply({...pricesOnly.args, authorize:async () => oldPhrase}), /Autorización comercial incorrecta/);
+  const first = await apply({...pricesOnly.args, authorize});
+  assert.equal(loadConfig(siteRoot).order.pricesApproved, true);
+  assert.equal(loadConfig(siteRoot).whatsapp.enabled, false);
+  const orders = await commercialFixture('SI', 'SI', 25.75);
+  await apply({...orders.args, authorize});
+  assert.equal(loadConfig(siteRoot).whatsapp.enabled, true);
+  const repriced = await commercialFixture('SI', 'SI', 31.50, '15550000124');
+  await assert.rejects(prepareCandidates(repriced.input, repriced.report, siteRoot), /cambios protegidos/);
+  await assert.rejects(apply({...repriced.args, authorize:async ({frase}) => {
+    await fs.appendFile(options.excel, 'edición tras revisar');
+    return frase;
+  }}), /Excel o plan cambiado/);
+  await fs.writeFile(options.excel, repriced.input);
+  const updated = await apply({...repriced.args, authorize});
+  assert.match(await fs.readFile(path.join(updated, 'BITACORA.txt'), 'utf8'), /autorizacionComercial[\s\S]*15550000124/);
+  assert.equal(readMenu(await fs.readFile(path.join(siteRoot, 'js/menu-data.js'), 'utf8'))[0].precio, 31.50);
+  const off = await commercialFixture('NO', 'NO', 31.50, '15550000124');
+  assert.doesNotMatch(off.prepared.files['index.html'], /class="price">\$/);
+  const deactivated = await apply({...off.args, authorize});
+  assert.equal(loadConfig(siteRoot).order.pricesApproved, false);
+  assert.equal(loadConfig(siteRoot).whatsapp.enabled, false);
+  await assert.rejects(restore({...options, id:path.basename(deactivated)}), /Falta autorización comercial/);
+  await restore({...options, id:path.basename(deactivated), authorize});
+  assert.equal(loadConfig(siteRoot).whatsapp.enabled, true);
+  await restore({...options, id:path.basename(updated), authorize});
+  // Volver al candidato inicial permite restaurar el catálogo informativo original.
+  const backups = await listBackups(options);
+  const second = backups.find(item => item.estado === 'aplicado' && item.id !== path.basename(first));
+  await restore({...options, id:second.id, authorize});
+  await restore({...options, id:path.basename(first)});
+  for (const file of publicFiles) assert.deepEqual(await fs.readFile(path.join(siteRoot, file)), originals[file]);
 });

@@ -8,6 +8,9 @@ const {root, hash, publicFiles, currentCheckout} = require('./candidate-plan.cjs
 const {prepareCandidates, candidateReport} = require('./generate-candidates.cjs');
 const {loadConfig} = require('./sync-seo.cjs');
 const {synchronizeSite} = require('./business-html.cjs');
+const {projectId, backupDirectory} = require('./studio-project.cjs');
+const {readMenu} = require('./generate-menu-html.cjs');
+const {snapshot} = require('./commercial-plan.cjs');
 
 const writeOrder = ['js/menu-data.js', 'js/config.js', 'index.html'];
 const digest = /^[a-f0-9]{64}$/;
@@ -48,13 +51,7 @@ async function within(folder, relative) {
 async function locked(siteRoot, privateRoot, action) {
   const site = await fs.realpath(siteRoot);
   const key = hash(site.toLowerCase());
-  const vault = path.resolve(privateRoot || path.join(os.tmpdir(), `mireka-menu-${key.slice(0, 16)}`));
-  const relative = path.relative(site, vault);
-  if (!relative || !path.isAbsolute(relative) && !relative.startsWith('..' + path.sep) && relative !== '..') {
-    throw new Error('El respaldo debe estar fuera de la raíz del sitio.');
-  }
-  await fs.mkdir(vault, {recursive:true, mode:0o700});
-  if (path.relative(vault, await fs.realpath(vault))) throw new Error('El directorio privado no puede estar redirigido.');
+  const vault = vaultPath(site, privateRoot);
   const server = net.createServer(socket => socket.destroy());
   const address = process.platform === 'win32' ? '\\\\.\\pipe\\mireka-menu-' + key :
     {host:'127.0.0.1', port:20000 + parseInt(key.slice(0, 4), 16) % 30000, exclusive:true};
@@ -66,6 +63,45 @@ async function locked(siteRoot, privateRoot, action) {
   }
   try { return await action(site, vault); }
   finally { await new Promise(resolve => server.close(resolve)); }
+}
+
+function vaultPath(site, privateRoot) {
+  const vault = path.resolve(privateRoot || backupDirectory(root));
+  const relative = path.relative(site, vault);
+  if (!relative || !path.isAbsolute(relative) && !relative.startsWith('..' + path.sep) && relative !== '..') {
+    throw new Error('El respaldo debe estar fuera de la raíz del sitio.');
+  }
+  return vault;
+}
+
+function legacyVault(site) {
+  return path.join(os.tmpdir(), `mireka-menu-${hash(site.toLowerCase()).slice(0, 16)}`);
+}
+
+async function availableVaults(site, privateRoot) {
+  const directories = new Map([vaultPath(site, privateRoot), legacyVault(site)].map(directory =>
+    [process.platform === 'win32' ? directory.toLowerCase() : directory, directory]));
+  const result = [];
+  for (const directory of directories.values()) {
+    try { await checkVault(directory); result.push(directory); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
+  return result;
+}
+
+async function findBackup(site, privateRoot, id) {
+  if (!transactionId.test(id)) throw new Error('Identificador de respaldo inválido. Usa el ID respaldo-…, sin ruta.');
+  const matches = [];
+  for (const vault of await availableVaults(site, privateRoot)) {
+    try { matches.push(await within(vault, id)); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
+  if (matches.length !== 1) throw new Error(matches.length ? 'ID de respaldo ambiguo.' : `No se encontró el respaldo ${id}.`);
+  return matches[0];
+}
+
+async function checkVault(vault) {
+  if (path.relative(vault, await fs.realpath(vault))) throw new Error('El directorio privado no puede estar redirigido.');
 }
 
 async function liveFiles(site) {
@@ -139,14 +175,58 @@ async function readState(folder) {
   catch (error) { if (error.code === 'ENOENT') return null; throw error; }
 }
 
-async function apply({excel, plan, directory, approval, siteRoot = root, privateRoot, afterWrite}) {
+async function listBackups({siteRoot = root, privateRoot} = {}) {
+  const backups = [];
+  const site = await fs.realpath(siteRoot);
+  for (const vault of await availableVaults(site, privateRoot)) {
+    for (const entry of await fs.readdir(vault, {withFileTypes:true})) {
+      if (entry.isDirectory() && transactionId.test(entry.name)) backups.push(await backupInfo(await within(vault, entry.name)));
+    }
+  }
+  return backups.sort((a, b) => b.fecha.localeCompare(a.fecha) || a.id.localeCompare(b.id));
+}
+
+async function backupInfo(folder) {
+  return {id:path.basename(folder), ruta:folder, fecha:(await fs.stat(folder)).birthtime.toISOString(),
+    estado:await readState(folder) || 'sin escritura iniciada'};
+}
+
+async function readBackupLog({id, siteRoot = root, privateRoot}) {
+  const folder = await findBackup(await fs.realpath(siteRoot), privateRoot, id);
+  return (await regular(await within(folder, 'BITACORA.txt'))).toString('utf8');
+}
+
+async function verifyOriginals(folder, meta) {
+  const contents = {};
+  for (const {ruta, sha256Original} of meta.archivos) {
+    contents[ruta] = await regular(await within(folder, 'original/' + ruta));
+    if (hash(contents[ruta]) !== sha256Original) throw new Error(`Respaldo alterado: ${ruta}.`);
+  }
+  return contents;
+}
+
+async function approveCommercial(commercial, authorize) {
+  if (!commercial.huella) return null;
+  if (!authorize) throw new Error('Falta autorización comercial independiente.');
+  const frase = `AUTORIZAR ${commercial.huella.slice(0, 12)}-${randomUUID().slice(0, 8)}`;
+  if (await authorize({...commercial, frase}) !== frase) throw new Error('Autorización comercial incorrecta o cancelada.');
+  let operador = null;
+  try { operador = os.userInfo().username; } catch { /* Entorno sin usuario disponible. */ }
+  return {...commercial, operador, fechaUtc:new Date().toISOString()};
+}
+
+async function apply({excel, plan, directory, approval, authorize, siteRoot = root, privateRoot, afterWrite}) {
   return locked(siteRoot, privateRoot, async (site, vault) => {
     let folder;
+    await fs.mkdir(vault, {recursive:true, mode:0o700});
+    await checkVault(vault);
     try {
-      await pendingTransactions(vault);
+      for (const directory of await availableVaults(site, privateRoot)) await pendingTransactions(directory);
       const workbook = await regular(excel);
       const preview = JSON.parse(await regular(plan));
-      const prepared = await prepareCandidates(workbook, preview, site);
+      const candidateMode = JSON.parse(await regular(path.join(await fs.realpath(directory), 'reporte-diferencias.json'))).comercial?.explicito === true;
+      const generation = {commercial:candidateMode};
+      const prepared = await prepareCandidates(workbook, preview, site, generation);
       const report = await validateBundle(directory, prepared);
       if (!digest.test(approval) || approval !== report.aprobacionSha256) throw new Error('Aprobación SHA-256 incorrecta o ausente.');
       if (!report.publicarTrasRevision.length) throw new Error('El conjunto candidato no contiene cambios aplicables.');
@@ -154,10 +234,11 @@ async function apply({excel, plan, directory, approval, siteRoot = root, private
       if (synchronizeSite(prepared.files['index.html'], config) !== prepared.files['index.html']) {
         throw new Error('El HTML comercial y SEO candidato requieren sincronización antes de aplicar.');
       }
+      const autorizacionComercial = await approveCommercial(report.comercial, authorize);
       folder = await fs.mkdtemp(path.join(vault, 'respaldo-'));
-      const meta = {version:1, sitio:site, excel:path.basename(excel), excelSha256:hash(workbook),
+      const meta = {version:1, proyecto:projectId, sitio:site, excel:path.basename(excel), excelSha256:hash(workbook),
         revisionBase:report.revisionBase, checkout:preview.plan.checkout, vistaPreviaSha256:report.vistaPreviaSha256,
-        aprobacion:approval, archivos:report.archivos};
+        aprobacion:approval, archivos:report.archivos, autorizacionComercial};
       for (const file of report.archivos) {
         const target = path.join(folder, 'original', file.ruta);
         await fs.mkdir(path.dirname(target), {recursive:true});
@@ -172,11 +253,13 @@ async function apply({excel, plan, directory, approval, siteRoot = root, private
         advertencias:preview.advertencias, errores:preview.errores, validaciones:'plan, dependencias, candidatos, SEO y bloqueos comerciales'});
       if (!Buffer.from(workbook).equals(await regular(excel)) ||
           !isDeepStrictEqual(preview, JSON.parse(await regular(plan)))) throw new Error('Excel o plan cambiado durante el respaldo.');
-      await prepareCandidates(workbook, preview, site);
+      await validateBundle(directory, await prepareCandidates(workbook, preview, site, generation));
+      await verifyOriginals(folder, meta);
       await state(folder, 'aplicando');
       const contents = Object.fromEntries(publicFiles.map(file => [file, Buffer.from(prepared.files[file])]));
       const expected = Object.fromEntries(meta.archivos.map(file => [file.ruta, file.sha256Original]));
       await replaceFiles(site, folder, meta.archivos, contents, expected, afterWrite);
+      await verifyOriginals(folder, meta);
       const listing = manifest(meta);
       const manifestPath = path.join(folder, 'ARCHIVOS_PARA_PUBLICAR.txt');
       await durableWrite(manifestPath, listing);
@@ -194,33 +277,38 @@ async function apply({excel, plan, directory, approval, siteRoot = root, private
   });
 }
 
-async function restore({id, recover = false, siteRoot = root, privateRoot, afterWrite}) {
+async function restore({id, recover = false, authorize, siteRoot = root, privateRoot, afterWrite}) {
   return locked(siteRoot, privateRoot, async (site, vault) => {
     let folder;
     try {
-      if (!transactionId.test(id)) throw new Error('Identificador de respaldo inválido.');
-      folder = await within(vault, id);
+      folder = await findBackup(site, privateRoot, id);
       const status = await readState(folder);
       if (recover ? !['aplicando', 'restaurando'].includes(status) : status !== 'aplicado') {
         throw new Error(`Estado de respaldo incompatible: ${status || 'sin escritura iniciada'}.`);
       }
       const meta = JSON.parse(await regular(await within(folder, 'respaldo.json')));
-      if (meta.version !== 1 || meta.sitio !== site || meta.checkout !== currentCheckout() ||
+      if (meta.version !== 1 || (meta.proyecto && meta.proyecto !== projectId) || meta.sitio !== site || meta.checkout !== currentCheckout() ||
           !isDeepStrictEqual(meta.archivos.map(file => file.ruta), publicFiles)) throw new Error('Respaldo incompatible con el sitio o la revisión actual.');
       const live = await liveFiles(site);
-      const contents = {}, expected = {};
+      const contents = await verifyOriginals(folder, meta), expected = {};
       for (const file of meta.archivos) {
         const {ruta, sha256Original, sha256Candidato} = file;
-        contents[ruta] = await regular(await within(folder, 'original/' + ruta));
-        if (hash(contents[ruta]) !== sha256Original) throw new Error(`Respaldo alterado: ${ruta}.`);
         expected[ruta] = hash(live[ruta]);
         if (expected[ruta] !== sha256Candidato && !(recover && expected[ruta] === sha256Original)) {
           throw new Error(`Cambio posterior o inesperado: ${ruta}.`);
         }
       }
-      await log(folder, recover ? 'Recuperación solicitada' : 'Reversión solicitada', meta);
+      const stateOf = files => snapshot(readMenu(files['js/menu-data.js'].toString('utf8')),
+        loadConfig(site, files['js/config.js'].toString('utf8')));
+      const anterior = stateOf(live), nuevo = stateOf(contents);
+      const needsApproval = (nuevo.mostrarPrecios || nuevo.whatsappActivo) && !isDeepStrictEqual(anterior, nuevo);
+      const huella = needsApproval ? hash(JSON.stringify({id, archivos:meta.archivos, anterior, nuevo})) : null;
+      const autorizacionComercial = await approveCommercial({anterior, nuevo, huella}, authorize);
+      await log(folder, recover ? 'Recuperación solicitada' : 'Reversión solicitada',
+        {...meta, estadoComercialAnterior:anterior, estadoComercialRestaurado:nuevo, autorizacionComercialRestauracion:autorizacionComercial});
       await state(folder, 'restaurando');
       await replaceFiles(site, folder, meta.archivos, contents, expected, afterWrite);
+      await verifyOriginals(folder, meta);
       const listing = path.join(folder, 'ARCHIVOS_PARA_PUBLICAR.txt');
       try {
         await regular(listing);
@@ -230,7 +318,7 @@ async function restore({id, recover = false, siteRoot = root, privateRoot, after
       await state(folder, 'restaurado');
       return folder;
     } catch (error) {
-      await log(folder || vault, 'Restauración rechazada o interrumpida', {id, error:error.message});
+      if (folder) await log(folder, 'Restauración rechazada o interrumpida', {id, error:error.message});
       throw error;
     }
   });
@@ -243,9 +331,9 @@ async function main([command, ...args]) {
   } else if (command === 'restore' && (args.length === 1 || args.length === 2 && args[1] === '--recover')) {
     console.log(await restore({id:args[0], recover:args[1] === '--recover'}));
   } else {
-    throw new Error('Usa apply <Excel> <vista-previa> <directorio-candidato> --approve <SHA-256> o restore <respaldo-ID> [--recover].');
+    throw new Error('Usa apply <Excel> <vista-previa> <directorio-candidato> --approve <SHA-256> o npm run menu:restore -- <ID respaldo-…> [--recover]. Indica el ID, no una ruta.');
   }
 }
 
 if (require.main === module) main(process.argv.slice(2)).catch(error => { console.error(error.message); process.exitCode = 1; });
-module.exports = {apply, restore};
+module.exports = {apply, restore, validateBundle, listBackups, readBackupLog, backupInfo};

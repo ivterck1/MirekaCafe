@@ -1,7 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {loadConfig} = require('./sync-seo.cjs');
-const {verifiedSocial} = require('./business-preview.cjs');
 
 const keys = {
   nombre:['business', 'name'], nombre_corto:['business', 'shortName'], descripcion:['business', 'description'],
@@ -26,21 +25,13 @@ function loadBusiness(root, source = fs.readFileSync(path.join(root, 'js/config.
   return {source, values, config};
 }
 
-function prepareBusiness(root, business, report) {
-  function assertBlocked(config) {
-    if (config.whatsapp.enabled !== false || config.order.pricesApproved !== false) {
-      throw new Error('Los bloqueos de WhatsApp y precios deben estar en false.');
-    }
-  }
-  assertBlocked(business.config);
+function prepareBusiness(root, business, report, commercial) {
   const assignments = [];
   const impacts = [];
   for (const change of [...report.cambios, ...report.negocio.solicitudes]) {
     if (change.hoja !== 'DATOS_NEGOCIO') continue;
     const {campo, nuevo, tipo} = change;
-    const pending = (['instagram', 'facebook', 'tiktok'].includes(campo) && nuevo &&
-      !verifiedSocial(campo, nuevo, business.config.contact.verifiedSocial)) ||
-      (tipo !== 'modificación' && tipo !== 'borrado propuesto');
+    const pending = tipo !== 'modificación' && tipo !== 'borrado propuesto';
     impacts.push({campo, superficies:surfaces[campo], estado:pending ? 'verificación o autorización pendiente' : 'cambio candidato'});
     if (pending) continue;
     const [group, key] = keys[campo];
@@ -54,11 +45,22 @@ function prepareBusiness(root, business, report) {
       }
     }
   }
+  for (const [key, value, previous] of [
+    ['order.pricesApproved', commercial.nuevo.mostrarPrecios, business.config.order.pricesApproved],
+    ['whatsapp.enabled', commercial.nuevo.whatsappActivo, business.config.whatsapp.enabled]
+  ]) {
+    if (value !== previous) assignments.push(`siteConfig.${key} = ${value};`);
+  }
   const source = business.source.toString('utf8');
   const eol = source.includes('\r\n') ? '\r\n' : '\n';
   const candidate = assignments.length ? source.trimEnd() + eol + eol +
     ['// Cambios comerciales propuestos desde Excel.', ...assignments, ''].join(eol) : source;
-  assertBlocked(loadConfig(root, candidate));
+  const config = loadConfig(root, candidate);
+  if (config.order.pricesApproved !== commercial.nuevo.mostrarPrecios ||
+      config.whatsapp.enabled !== commercial.nuevo.whatsappActivo ||
+      config.whatsapp.number !== commercial.nuevo.destinatario) {
+    throw new Error('La configuración candidata no coincide con el plan comercial.');
+  }
   return {candidate, impacts};
 }
 

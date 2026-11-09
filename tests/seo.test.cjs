@@ -7,6 +7,8 @@ const vm = require('node:vm');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const { renderSeo, synchronize, loadConfig } = require('../tools/sync-seo.cjs');
 const { synchronizeSite } = require('../tools/business-html.cjs');
+const {readMenu, synchronizeMenu} = require('../tools/generate-menu-html.cjs');
+const {serializeCatalog} = require('../tools/import-menu.cjs');
 const config = loadConfig();
 const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 const title = 'Mireka Café | Cafetería de autor y menú';
@@ -77,14 +79,24 @@ test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', 
   fixture.contact.phone = '+525500000001';
   const profiles = {instagram:'https://www.instagram.com/perfil_prueba/',
     facebook:'https://www.facebook.com/perfil_prueba', tiktok:'https://www.tiktok.com/@perfil_prueba'};
-  Object.assign(fixture.contact, profiles, {verifiedSocial:profiles});
+  Object.assign(fixture.contact, profiles);
   const fixtureHtml = synchronizeSite(html, fixture);
+  const configSource = fs.readFileSync(path.join(root, 'js/config.js'), 'utf8');
+  const pricedMenu = readMenu(fs.readFileSync(path.join(root, 'js/menu-data.js'), 'utf8'))
+    .map(item => ({...item, precio:25.75}));
+  const commercialModes = [[false, false], [true, false], [true, true]].map(([pricesApproved, enabled]) => ({
+    'index.html':synchronizeMenu(html, pricedMenu, config.images.productPlaceholder, {...config.order, pricesApproved}),
+    'js/menu-data.js':serializeCatalog(pricedMenu),
+    'js/config.js':configSource + `\nsiteConfig.order.pricesApproved = ${pricesApproved}; siteConfig.whatsapp.enabled = ${enabled}; siteConfig.whatsapp.number = "15550000123";`
+  }));
   const server = http.createServer((req, res) => {
     try {
       const requestPath = new URL(req.url, 'http://localhost').pathname;
-      const pathname = requestPath.replace(/^\/(?:MirekaCafe|revision)\//, '/');
-      const file = path.join(root, pathname === '/' ? 'index.html' : pathname);
-      const body = requestPath === '/revision/' ? fixtureHtml : fs.readFileSync(file);
+      const mode = /^\/modo-([012])\//.exec(requestPath)?.[1];
+      const pathname = requestPath.replace(/^\/(?:MirekaCafe|revision|modo-[012])\//, '/');
+      const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
+      const file = path.join(root, relative);
+      const body = requestPath === '/revision/' ? fixtureHtml : commercialModes[mode]?.[relative] ?? fs.readFileSync(file);
       res.writeHead(200, { 'Content-Type': ({ '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript',
         '.webp': 'image/webp', '.png': 'image/png', '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' })[path.extname(file)] || 'application/octet-stream' });
       res.end(body);
@@ -150,7 +162,7 @@ test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', 
       } finally { await page.close(); }
     });
   }
-  for (const width of [390, 1440]) await t.test(`contacto y redes verificadas a ${width}px`, async () => {
+  for (const width of [390, 1440]) await t.test(`contacto y enlaces sociales a ${width}px`, async () => {
     const page = await browser.newPage({viewport:{width, height:900}, javaScriptEnabled:width !== 390});
     try {
       await page.goto(`http://127.0.0.1:${server.address().port}/revision/`);
@@ -163,15 +175,32 @@ test('HTML inicial y DOM conservan SEO en raíz y subdirectorio, con y sin JS', 
       assert.equal(await contact.evaluate(() => document.documentElement.scrollWidth), width);
     } finally { await page.close(); }
   });
+  for (const mode of [0, 1, 2]) for (const js of [false, true]) {
+    await t.test(`modo comercial ${mode} · JavaScript ${js}`, async () => {
+      const page = await browser.newPage({javaScriptEnabled:js, viewport:{width:1440, height:900}});
+      try {
+        await page.goto(`http://127.0.0.1:${server.address().port}/modo-${mode}/`);
+        const price = await page.locator('.menu-card:visible .price').first().innerText();
+        assert.equal(price, mode ? '$25.75' : 'Precio pendiente');
+        if (js) {
+          await page.locator('.menu-card:visible button').first().click();
+          assert.equal(await page.locator('#cart-total').innerText(), mode ? '$25.75' : '—');
+          assert.equal(await page.locator('.whatsapp-button').isDisabled(), mode !== 2);
+        } else {
+          assert.equal(await page.locator('.menu-card button').count(), 0);
+          assert.equal(await page.locator('.whatsapp-button').isDisabled(), true);
+        }
+      } finally { await page.close(); }
+    });
+  }
 });
 
-test('omite enlaces inválidos o distintos de la URL confirmada y escapa texto comercial', () => {
+test('omite enlaces inválidos y escapa texto comercial', () => {
   const draft = JSON.parse(JSON.stringify(config));
   draft.business.description = 'Café <script> de prueba';
-  draft.contact.instagram = 'https://instagram.com/otro';
+  draft.contact.instagram = 'http://instagram.com/otro';
   draft.contact.facebook = 'https://facebook.com.ejemplo.test/perfil';
-  draft.contact.tiktok = 'https://www.tiktok.com/@perfil';
-  draft.contact.verifiedSocial = {instagram:'https://instagram.com/perfil', facebook:draft.contact.facebook};
+  draft.contact.tiktok = 'https://www.tiktok.com/@perfil/video/123';
   const output = synchronizeSite(html, draft);
   assert.match(output, /Café &lt;script&gt; de prueba/);
   assert.doesNotMatch(output, /aria-label="Redes sociales"|instagram\.com\/otro|facebook\.com\.ejemplo|tiktok\.com\/@perfil/);

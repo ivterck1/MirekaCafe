@@ -26,9 +26,7 @@ const siteConfig = {
     phone: "",
     instagram: "",
     facebook: "",
-    tiktok: "",
-    // Solo URLs exactas cuya titularidad ya se confirmó fuera del Excel.
-    verifiedSocial: {}
+    tiktok: ""
   },
   order: {
     currency: "MXN",

@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {escape, loadConfig, synchronize} = require('./sync-seo.cjs');
-const {validPhone, verifiedSocial} = require('./business-preview.cjs');
+const {validPhone, validSocialUrl} = require('./business-preview.cjs');
 
 function replaceBlock(html, label, lines, indent) {
   const start = `<!-- ${label}:START -->`;
@@ -30,7 +30,7 @@ function synchronizeBusiness(html, {business, contact, images}) {
   }
   const socials = {instagram:'Instagram', facebook:'Facebook', tiktok:'TikTok'};
   const links = Object.entries(socials)
-    .filter(([field]) => verifiedSocial(field, contact[field], contact.verifiedSocial))
+    .filter(([field]) => validSocialUrl(field, contact[field]))
     .map(([field, label]) => `      <a href="${escape(contact[field])}">${label}</a>`);
   if (links.length) lines.push('    <nav aria-label="Redes sociales">', ...links, '    </nav>');
   lines.push('  </div>', '</div>',

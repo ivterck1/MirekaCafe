@@ -28,19 +28,28 @@ function businessRows(values, fields = schema) {
   return [[...headers], ...Object.keys(fields).map(field => [field, values[field] ?? ''])];
 }
 
-function socialStatus(value, hosts) {
-  if (/^@?[\p{L}\p{N}_][\p{L}\p{N}_.-]*$/u.test(value)) return 'usuario';
-  if (!/^https:\/\//i.test(value) || /[\s\\]/.test(value)) return null;
+function socialLink(field, value, hosts) {
+  const handle = /^[a-z0-9_][a-z0-9_.-]{0,99}$/i;
+  const reserved = /^(?:accounts|about|business|community|embed|explore|help|l\.php|login|logout|oauth|p|privacy|profile\.php|reel|reels|redirect|search|share|sharer\.php|stories|terms|watch)$/i;
+  const validHandle = name => handle.test(name) && !reserved.test(name) && !name.endsWith('.') && !name.includes('..');
+  const name = value.replace(/^@/, '');
+  if (validHandle(name)) {
+    return {url:`https://${hosts[1]}/${field === 'tiktok' ? '@' : ''}${name}`, fromHandle:true};
+  }
+  if (!/^https:\/\//i.test(value) || /[\s\\\x00-\x1f\x7f]/.test(value)) return null;
   try {
     const url = new URL(value);
-    if (!hosts.includes(url.hostname) || url.username || url.password || url.port || url.pathname === '/') return null;
-    return 'url';
+    if (!hosts.includes(url.hostname) || url.username || url.password || url.port || url.hash) return null;
+    if (field === 'facebook' && url.pathname === '/profile.php' && /^\?id=\d+$/.test(url.search)) return {url:url.href};
+    const segment = /^\/([^/]+)\/?$/.exec(url.pathname)?.[1];
+    if (!segment || url.search || (field === 'tiktok' ? !segment.startsWith('@') || !validHandle(segment.slice(1)) : !validHandle(segment))) return null;
+    return {url:url.href};
   } catch {
     return null;
   }
 }
 
-function previewBusiness(sheet, previous, fields = schema, verified) {
+function previewBusiness(sheet, previous, fields = schema) {
   const result = {errores:[], advertencias:[], cambios:[], solicitudes:[]};
   const issue = (list, fila, campo, mensaje) => result[list].push({hoja:sheetName, fila, campo, mensaje});
   const rows = new Set();
@@ -65,7 +74,7 @@ function previewBusiness(sheet, previous, fields = schema, verified) {
     if (seen.has(campo)) { error('Campo duplicado.'); continue; }
     seen.add(campo);
     const rule = fields[campo];
-    const value = cellText(cell);
+    let value = cellText(cell);
     if (value === null && cell?.v != null && cell.v !== '') { error('El valor debe ser texto.'); continue; }
     if (!value) {
       if (rule.required) error('El valor es obligatorio.');
@@ -87,14 +96,10 @@ function previewBusiness(sheet, previous, fields = schema, verified) {
       } catch { error('Usa una configuración regional válida y admitida, como es-MX.'); continue; }
     }
     if (rule.hosts) {
-      const status = socialStatus(value, rule.hosts);
-      if (!status) { error('Usa una URL HTTPS del dominio de la red o un usuario sin espacios.'); continue; }
-      if (status === 'usuario') {
-        warn('Usuario pendiente de validar. No se generó una URL.');
-        if (value !== anterior) result.solicitudes.push({...location, tipo:'usuario pendiente', anterior, nuevo:value});
-        continue;
-      }
-      if (value !== anterior && !verifiedSocial(campo, value, verified)) warn('URL con sintaxis válida. Perfil y titularidad pendientes de verificar.');
+      const link = socialLink(campo, value, rule.hosts);
+      if (!link) { error('Usa una URL HTTPS de perfil de la red o un usuario válido.'); continue; }
+      if (link.fromHandle) warn(`Enlace construido desde el usuario: ${link.url}. No se comprobó la existencia del perfil.`);
+      value = link.url;
     }
     if (rule.requestOnly) {
       if (value === 'SI') {
@@ -113,13 +118,14 @@ function previewBusiness(sheet, previous, fields = schema, verified) {
   return result;
 }
 
-function verifiedSocial(field, value, verified) {
+function validSocialUrl(field, value) {
   const hosts = Object.hasOwn(schema, field) && schema[field].hosts;
-  return Boolean(hosts && typeof value === 'string' && verified?.[field] === value && socialStatus(value, hosts) === 'url');
+  const link = hosts && typeof value === 'string' && socialLink(field, value, hosts);
+  return Boolean(link && !link.fromHandle);
 }
 
 function validPhone(value) {
   return typeof value === 'string' && schema.telefono.pattern.test(value);
 }
 
-module.exports = {businessRows, previewBusiness, sheetName, verifiedSocial, validPhone};
+module.exports = {businessRows, previewBusiness, sheetName, validSocialUrl, validPhone};

@@ -23,12 +23,15 @@ function relativeImage(source) {
   return escape(source);
 }
 
-function renderMenuHtml(items, fallback) {
+function renderMenuHtml(items, fallback, order) {
   if (!Array.isArray(items)) throw new Error('El catálogo debe ser un arreglo.');
   const groups = new Map();
   const ids = new Set();
   const anchors = new Set();
   const fallbackSrc = relativeImage(fallback);
+  const formatter = order?.pricesApproved === true ? new Intl.NumberFormat(order.locale, {
+    style:'currency', currency:order.currency
+  }) : null;
   for (const item of items) {
     if (typeof item.id !== 'string' || !/^[a-z0-9-]+$/.test(item.id) || ids.has(item.id)) {
       throw new Error(`ID inválido o duplicado: ${item.id}`);
@@ -65,7 +68,7 @@ function renderMenuHtml(items, fallback) {
         '      <div class="dish-content">',
         `        <h4>${name}</h4>`,
         `        <p>${escape(item.descripcion)}</p>`,
-        '        <div class="dish-footer"><p class="price">Precio pendiente</p></div>',
+        `        <div class="dish-footer"><p class="price">${formatter ? escape(formatter.format(item.precio)) : 'Precio pendiente'}</p></div>`,
         '      </div>', '    </article>');
     }
     lines.push('  </div>', '</section>');
@@ -73,14 +76,14 @@ function renderMenuHtml(items, fallback) {
   return lines.join('\n');
 }
 
-function synchronizeMenu(html, items, fallback) {
+function synchronizeMenu(html, items, fallback, order) {
   const first = html.indexOf(start);
   const last = html.indexOf(end);
   if (first < 0 || last <= first || html.split(start).length !== 2 || html.split(end).length !== 2) {
     throw new Error('Bloque de catálogo ausente o duplicado.');
   }
   const eol = html.includes('\r\n') ? '\r\n' : '\n';
-  const block = renderMenuHtml(items, fallback).split('\n').map(line => indent + line).join(eol);
+  const block = renderMenuHtml(items, fallback, order).split('\n').map(line => indent + line).join(eol);
   return html.slice(0, first + start.length) + eol + block + eol + indent + html.slice(last);
 }
 
@@ -91,7 +94,8 @@ if (require.main === module) {
     const file = path.join(root, 'index.html');
     const html = fs.readFileSync(file, 'utf8');
     const items = readMenu(fs.readFileSync(path.join(root, 'js/menu-data.js'), 'utf8'));
-    const next = synchronizeMenu(html, items, loadConfig().images.productPlaceholder);
+    const config = loadConfig();
+    const next = synchronizeMenu(html, items, config.images.productPlaceholder, config.order);
     if (next !== html) {
       if (mode === '--check') throw new Error('Catálogo HTML desactualizado. Ejecuta npm run menu:html:sync.');
       fs.writeFileSync(file, next);

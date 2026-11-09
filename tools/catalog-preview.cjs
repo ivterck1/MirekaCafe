@@ -14,14 +14,13 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const previewDirectory = path.join(root, 'tmp', 'catalogo-v2');
 const templatePath = path.join(previewDirectory, 'menu-mireka-v2-control.xlsx');
 
-function loadBaseline() {
-  const source = execFileSync('git', ['-c', `safe.directory=${root.replaceAll('\\', '/')}`, 'show', `${revision}:js/menu-data.js`], {cwd:root});
+function loadBaseline(source = execFileSync('git', ['-c', `safe.directory=${root.replaceAll('\\', '/')}`, 'show', `${revision}:js/menu-data.js`], {cwd:root})) {
   const counts = new Map();
   const categories = [];
   const products = readMenu(source.toString('utf8')).map(product => {
     const {categoria} = product;
-    if (!Object.hasOwn(categoryIds, categoria)) throw new Error(`Categoría sin ID base: ${categoria}`);
-    const categoria_id = categoryIds[categoria];
+    const categoria_id = product.categoria_id || (Object.hasOwn(categoryIds, categoria) && categoryIds[categoria]);
+    if (!Object.values(categoryIds).includes(categoria_id)) throw new Error(`Categoría sin ID base: ${categoria}`);
     if (!counts.has(categoria)) categories.push({categoria, id:categoria_id, orden:categories.length + 1});
     const orden = (counts.get(categoria) || 0) + 1;
     counts.set(categoria, orden);
@@ -29,7 +28,10 @@ function loadBaseline() {
     if (!product.imagen.startsWith(prefix)) throw new Error(`Ruta base inesperada: ${product.imagen}`);
     return {...product, categoria_id, orden, imagen:product.imagen.slice(prefix.length)};
   });
-  if (categories.length !== Object.keys(categoryIds).length || new Set(Object.values(categoryIds)).size !== categories.length) {
+  for (const [categoria, id] of Object.entries(categoryIds)) {
+    if (!categories.some(category => category.id === id) && !counts.has(categoria)) categories.push({categoria, id, orden:categories.length + 1});
+  }
+  if (categories.length !== Object.keys(categoryIds).length || new Set(categories.map(category => category.id)).size !== categories.length) {
     throw new Error('El registro de IDs de categorías difiere de la base.');
   }
   return {source, categories, products};
@@ -107,7 +109,7 @@ async function analyze(source, base = loadBaseline(), business = loadBusiness(ro
     }
   }
   if (parsed.persistent && parsed.businessSheet) {
-    const {cambios, ...details} = previewBusiness(parsed.businessSheet, business.values, undefined, business.config?.contact.verifiedSocial);
+    const {cambios, ...details} = previewBusiness(parsed.businessSheet, business.values);
     report.negocio = details;
     report.cambios.push(...cambios);
     for (const kind of ['errores', 'advertencias']) {
@@ -123,7 +125,7 @@ async function analyze(source, base = loadBaseline(), business = loadBusiness(ro
     report.advertencias.push('Las filas omitidas son bajas propuestas y requieren aprobación explícita.');
   }
   if (report.errores.length) report.estado = 'bloqueado';
-  return {report, items:catalogItems(parsed.products)};
+  return {report, items:catalogItems(parsed.products, categoryIds)};
 }
 
 async function preview(...args) {
@@ -137,12 +139,17 @@ async function main() {
   }
   const {review} = require('./candidate-plan.cjs');
   const {report} = await review(await fs.readFile(input));
-  const output = path.join(previewDirectory, `vista-previa-${report.hashesSha256.excel}.json`);
-  await fs.mkdir(previewDirectory, {recursive:true});
-  await fs.writeFile(output, JSON.stringify(report, null, 2) + '\n', 'utf8');
+  const output = await writePreview(report);
   console.log(`${report.estado} | ${report.cambios.length} cambios | ${report.errores.length} errores | ${report.advertencias.length} advertencias\n${output}`);
   if (report.errores.length) process.exitCode = 1;
 }
 
-module.exports = {preview, analyze, loadBaseline, templateRows, templatePath};
+async function writePreview(report) {
+  const output = path.join(previewDirectory, `vista-previa-${report.hashesSha256.excel}.json`);
+  await fs.mkdir(previewDirectory, {recursive:true});
+  await fs.writeFile(output, JSON.stringify(report, null, 2) + '\n', 'utf8');
+  return output;
+}
+
+module.exports = {preview, analyze, loadBaseline, templateRows, templatePath, writePreview};
 if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
