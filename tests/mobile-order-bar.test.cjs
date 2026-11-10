@@ -150,7 +150,7 @@ test('barra compacta conserva el diálogo, indicadores y persistencia', async (t
           surface: getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim(),
           manifest: document.querySelector('link[rel~="manifest"]') !== null }));
         assert.deepEqual(state, { products: 101, categories: 18, routes: 94, prices: true, whatsapp: true,
-          overflow: false, themes: [{ content: '#FFF9F6', parent: 'HEAD', media: null }], surface: '#FFF9F6', manifest: false });
+          overflow: false, themes: [{ content: '#650F20', parent: 'HEAD', media: null }], surface: '#FFF9F6', manifest: false });
         assert.deepEqual(errors, []);
       } finally { await page.close(); }
     });

@@ -40,9 +40,35 @@ function synchronizeBusiness(html, {business, contact, images}) {
   for (const field of ['hours', 'address', 'coverage']) {
     if (contact[field]?.trim()) lines.push(`    <p>${escape(contact[field])}</p>`);
   }
-  if (validPhone(contact.phone)) {
-    lines.push(`    <p><a class="contact-phone" href="tel:${escape(contact.phone)}">Teléfono: ${escape(contact.phone)}</a></p>`);
-  }
+ if (validPhone(contact.phone)) {const phone = String(contact.phone).replace(/\D/g, "");
+  const nationalPhone = phone.startsWith("52") && phone.length === 12
+    ? phone.slice(2)
+    : phone;
+
+  const displayPhone = nationalPhone.length === 10
+    ? `${nationalPhone.slice(0, 2)} ${nationalPhone.slice(2, 6)} ${nationalPhone.slice(6)}`
+    : nationalPhone;
+
+  const dialPhone = phone.length === 12 && phone.startsWith("52")
+    ? `+${phone}`
+    : phone.length === 10
+      ? `+52${phone}`
+      : `+${phone}`;
+
+  lines.push(`    <p><a class="contact-phone"
+   href="tel:${escape(dialPhone)}"
+   aria-label="Teléfono: ${escape(displayPhone)}">
+      <svg xmlns="http://www.w3.org/2000/svg"
+           width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.19 18.81a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.09 4.18 2 2 0 0 1 4.08 2h3a2 2 0 0 1 2 1.72c.12.96.35 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.04 9.91a16 16 0 0 0 6.05 6.05l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.56 2.81.68A2 2 0 0 1 22 16.92z"/>
+      </svg>
+      <span>${escape(displayPhone)}</span>
+    </a></p>`);
+}
+
   const links = Object.entries(socialIcons)
     .filter(([field]) => validSocialUrl(field, contact[field]))
     .map(([field, {label, shape}]) => `      <a href="${escape(contact[field])}" target="_blank" rel="noopener noreferrer" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">${shape}</svg></a>`);

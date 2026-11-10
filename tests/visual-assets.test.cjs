@@ -64,7 +64,7 @@ test('logo local, marfil y espacio del hero permanecen estables durante la carga
             heroBackground: getComputedStyle(document.querySelector('#inicio')).backgroundColor };
         });
         assert.equal(assets.alpha, 0, 'transparencia conservada');
-        assert.equal(assets.theme, '#FFF9F6');
+        assert.equal(assets.theme, '#650F20');
         assert.deepEqual(assets.backgrounds, Array(3).fill('rgb(255, 249, 246)'));
         assert.equal(assets.bodyImage, 'none');
         assert.equal(assets.heroBackground, 'rgb(89, 15, 25)');

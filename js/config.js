@@ -51,3 +51,7 @@ siteConfig.seo.description = "Café | Bebidas | Snacks | Regalos";
 siteConfig.contact.instagram = "https://www.instagram.com/mirekacafe";
 siteConfig.contact.facebook = "https://www.facebook.com/mirekacafe";
 siteConfig.contact.tiktok = "https://www.tiktok.com/@mirekacafe";
+
+// Cambios comerciales propuestos desde Excel.
+siteConfig.contact.phone = "525578477015";
+siteConfig.contact.coverage = "Col Jardín Balbuena";

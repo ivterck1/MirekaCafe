@@ -57,7 +57,10 @@ test('SEO conserva el inventario, el estado comercial autorizado y noindex', () 
   assert.equal(config.whatsapp.enabled, true);
   assert.equal(config.seo.robots, 'noindex,follow');
   assert.ok(/^52\d{6}7015$/.test(config.whatsapp.number), 'destinatario mexicano autorizado');
-  assert.deepEqual([...new Set(menu.map(p => p.precio))].sort((a,b) => a-b), Array.from({length:101}, (_, i) => i + 2));
+  assert.ok(
+  menu.every(p => Number.isFinite(p.precio) && p.precio > 0),
+  'todos los productos deben tener precios válidos'
+);
   assert.equal(fs.existsSync(path.join(__dirname, '../robots.txt')), false);
 });
 

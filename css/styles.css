@@ -1560,3 +1560,15 @@ h1, h2, .story-card .story-highlight { font-family: var(--font-heading); }
   background-repeat: no-repeat;
   background-size: min(2rem, 50%) 2px;
 }
+
+
+.contact-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.contact-phone svg {
+  flex-shrink: 0;
+  color: #d6b16e;
+}
