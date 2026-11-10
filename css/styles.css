@@ -1361,9 +1361,11 @@ img[data-image-state="unavailable"] {
   }
 
   .mobile-cart-dialog .cart-panel {
+    --cart-panel-inset: 1rem;
     max-height: min(82svh, 720px);
     overflow: auto;
     overscroll-behavior: contain;
+    padding: 0 var(--cart-panel-inset) var(--cart-panel-inset);
     scroll-padding-top: 5rem;
   }
 
@@ -1371,6 +1373,8 @@ img[data-image-state="unavailable"] {
     position: sticky;
     top: 0;
     z-index: 1;
+    margin-inline: calc(-1 * var(--cart-panel-inset));
+    padding: var(--cart-panel-inset) var(--cart-panel-inset) 0;
     background: var(--color-surface);
   }
 

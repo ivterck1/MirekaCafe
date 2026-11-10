@@ -89,6 +89,45 @@ test('barra compacta conserva el diálogo, indicadores y persistencia', async (t
           await page.evaluate(() => { for (let n = 3; n < 101; n++) increaseCartItem(menuItems[0].id); });
           assert.equal(await page.locator('#mobile-order-count').innerText(), '101 productos');
           await assertRow();
+          await page.evaluate(() => {
+            for (const product of menuItems.slice(1, 13)) addProductToCart(product.id);
+          });
+          await toggle.click();
+          const panel = dialog.locator('.cart-panel');
+          const header = panel.locator('.cart-panel-header');
+          const bounds = () => header.evaluate(element => {
+            const header = element.getBoundingClientRect();
+            const panel = element.parentElement;
+            const {top, left} = panel.getBoundingClientRect();
+            const x = left + panel.clientLeft;
+            const y = top + panel.clientTop;
+            return {
+              coversTop: Math.abs(header.top - y) < 1,
+              coversWidth: Math.abs(header.left - x) < 1 && Math.abs(header.right - x - panel.clientWidth) < 1,
+              coversEdges: [x + 4, x + panel.clientWidth - 5].every(point => element.contains(document.elementFromPoint(point, y + header.height / 2))),
+              background: getComputedStyle(element).backgroundColor,
+              scroll: panel.scrollTop
+            };
+          });
+          assert.deepEqual(await bounds(), {
+            coversTop: true, coversWidth: true, coversEdges: true, background: 'rgb(255, 249, 246)', scroll: 0
+          });
+          await panel.evaluate(element => { element.scrollTop = 350; });
+          assert.deepEqual(await bounds(), {
+            coversTop: true, coversWidth: true, coversEdges: true, background: 'rgb(255, 249, 246)', scroll: 350
+          });
+          await panel.locator('#customer-name').fill('Pedido de revisión');
+          const submit = panel.locator('.whatsapp-button');
+          await submit.scrollIntoViewIfNeeded();
+          assert.equal(await submit.evaluate(element => {
+            const box = element.getBoundingClientRect();
+            return element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+          }), true, 'el botón sigue accesible al final del panel');
+          await header.getByRole('button', {name: 'Cerrar pedido'}).click();
+          assert.equal(await toggle.evaluate(e => e === document.activeElement), true);
+          await page.evaluate(() => {
+            for (const product of menuItems.slice(1, 13)) removeCartItem(product.id);
+          });
           const cdp = await page.context().newCDPSession(page);
           await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: 0, left: 0, right: 0, bottom: 34 } });
           await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
@@ -107,9 +146,11 @@ test('barra compacta conserva el diálogo, indicadores y persistencia', async (t
         const state = await page.evaluate(() => ({ products: menuItems.length, categories: new Set(menuItems.map(p => p.categoria)).size,
           routes: new Set(menuItems.map(p => p.imagen)).size, prices: siteConfig.order.pricesApproved,
           whatsapp: siteConfig.whatsapp.enabled, overflow: document.documentElement.scrollWidth > innerWidth,
-          themes: [...document.querySelectorAll('meta[name="theme-color"]')].map(e => ({ content: e.content, parent: e.parentElement.tagName })) }));
+          themes: [...document.querySelectorAll('meta[name="theme-color"]')].map(e => ({ content: e.content, parent: e.parentElement.tagName, media: e.getAttribute('media') })),
+          surface: getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim(),
+          manifest: document.querySelector('link[rel~="manifest"]') !== null }));
         assert.deepEqual(state, { products: 101, categories: 18, routes: 94, prices: true, whatsapp: true,
-          overflow: false, themes: [{ content: '#FFF9F6', parent: 'HEAD' }] });
+          overflow: false, themes: [{ content: '#FFF9F6', parent: 'HEAD', media: null }], surface: '#FFF9F6', manifest: false });
         assert.deepEqual(errors, []);
       } finally { await page.close(); }
     });
